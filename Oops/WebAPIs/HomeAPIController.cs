@@ -8,6 +8,7 @@ using Oops.Daos;
 using Oops.Services;
 using Oops.DataModels;
 using Oops.ViewModels;
+using System.Threading.Tasks;
 
 namespace Oops.WebAPIs
 {
@@ -61,7 +62,7 @@ namespace Oops.WebAPIs
         }
         [HttpPost]
         [Route("api/getLogs")]
-        public dynamic GetLogs([FromBody]GetLogsModel model)
+        public async Task<dynamic> GetLogs([FromBody]GetLogsModel model)
         {
             if (model == null)
             {
@@ -76,8 +77,8 @@ namespace Oops.WebAPIs
             List<ErrorModel> logs;
             if (string.IsNullOrEmpty(model.sql))
             {
-                logs = dao.GetLogs(model.app, page ?? 1, pageSize ?? 20,
-                    out currentPage, out totalPage, out totalRows)
+                var response = await dao.GetLogs(model.app, page ?? 1, pageSize ?? 20);
+                logs = response.Errors
                     .Select(t => new ErrorModel
                     {
                         id = t.Id,
@@ -91,10 +92,14 @@ namespace Oops.WebAPIs
                         date = t.Time.ToString("yyyy/MM/dd"),
                         time = t.Time.ToString("HH:mm:ss")
                     }).ToList();
+                currentPage = response.CurrentPage;
+                totalPage = response.TotalPage;
+                totalRows = response.TotalRows;
             } 
             else
-            {                
-                logs = dao.GetLogsBySql(model.sql)
+            {
+                var response = await dao.GetLogsBySql(model.sql);
+                logs = response.Errors
                     .Select(t => new ErrorModel
                     {
                         id = t.Id,
@@ -108,8 +113,10 @@ namespace Oops.WebAPIs
                         date = t.Time.ToString("yyyy/MM/dd"),
                         time = t.Time.ToString("HH:mm:ss")
                     }).ToList();
-                totalPage = 1;
-                totalRows = logs.Count;
+                
+                currentPage = response.CurrentPage;
+                totalPage = response.TotalPage;
+                totalRows = response.TotalRows;
             }
             return Ok(new { logs, pageInfo = new { currentPage, totalPage, totalRows } });
         }

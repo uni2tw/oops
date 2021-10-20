@@ -9,12 +9,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using Oops.DataModels;
 using Oops.ViewModels;
-using Oops.Components;
 
 namespace Oops.Daos
 {
 
-    public class ErrorDao
+    public class ErrorDao : DaoBase
     {
         public List<Error> GetErrorLogs()
         {
@@ -47,18 +46,7 @@ namespace Oops.Daos
             }
         }
 
-        public string LoadConnectString()
-        {
-            string dbDir = Helper.MapPath("db");
-            if (System.IO.Directory.Exists(dbDir) == false) {
-                System.IO.Directory.CreateDirectory(dbDir);
-            }            
-            string dbFilePath = System.IO.Path.Combine(dbDir, "my.db");
-            return string.Format(@"data source={0};version=3;", dbFilePath);
-        }
-
-        public List<Error> GetLogs(string application, int page, int pageSize, 
-            out int currentPage, out int totalPage, out int totalRows)
+        public async Task<ErrorsResponse> GetLogs(string application, int page, int pageSize)
         {
             using (IDbConnection conn = new SQLiteConnection(LoadConnectString()))
             {
@@ -75,30 +63,32 @@ namespace Oops.Daos
 
                 string sqlCount = string.Format("{0} {1}",
                     sqlCountHeader, sqlWhere);
-
-                totalRows = conn.ExecuteScalar<int>(sqlCount, parameters);
-                totalPage = (totalRows / pageSize) + (totalRows % pageSize == 0 ? 0 : 1);
-                if (page > totalPage)
+                ErrorsResponse response = new ErrorsResponse();
+                response.TotalRows = await conn.ExecuteScalarAsync<int>(sqlCount, parameters);
+                response.TotalPage = (response.TotalRows / pageSize) + (response.TotalRows % pageSize == 0 ? 0 : 1);
+                if (page > response.TotalPage)
                 {
-                    currentPage = 1;
+                    response.CurrentPage = 1;
                 } 
                 else
                 {
-                    currentPage = page;
+                    response.CurrentPage = page;
                 }
 
                 int startIndex = (page - 1) * pageSize;
                 string sqlQuery = string.Format("{0} {1} order by id desc limit {2},{3}",
                     sqlQueryHeader, sqlWhere, startIndex, pageSize);
 
-                var result = conn.Query<Error>(sqlQuery, parameters).ToList();
-                result.ForEach(t => t.PrepareData());
-                return result;
+                List<Error> errors = conn.Query<Error>(sqlQuery, parameters).ToList();
+                errors.ForEach(t => t.PrepareData());
+                response.Errors = errors;
+                return response;
             }
         }
 
-        public List<Error> GetLogsBySql(string rawSql)
+        public async Task<ErrorsResponse> GetLogsBySql(string rawSql)
         {
+            ErrorsResponse response = new ErrorsResponse();
             using (IDbConnection conn = new SQLiteConnection(LoadConnectString()))
             {
                 string sqlQuery;
@@ -111,9 +101,13 @@ namespace Oops.Daos
                     sqlQuery = rawSql + " limit 0, 100";
                 }
 
-                var result = conn.Query<Error>(rawSql).ToList();
-                result.ForEach(t => t.PrepareData());
-                return result;
+                var errors = (await conn.QueryAsync<Error>(rawSql)).ToList();
+                errors.ForEach(t => t.PrepareData());
+                response.Errors = errors;
+                response.CurrentPage = 1;
+                response.TotalPage = 1;
+                response.TotalRows = errors.Count;
+                return response;
             }
         }
 
@@ -148,5 +142,13 @@ namespace Oops.Daos
 
     }
 
+    public class ErrorsResponse
+    {
+        public List<Error> Errors { get; set; }
+        
+        public int CurrentPage { get; set; }
+        public int TotalPage { get; set; }
+        public int TotalRows { get; set; }
+    }
 
 }
