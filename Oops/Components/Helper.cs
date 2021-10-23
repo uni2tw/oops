@@ -21,15 +21,7 @@ namespace Oops.Components
                     Path.DirectorySeparatorChar;
             }
             string result = Path.Combine(_rootPath, relPath);
-
-            return result;
-            /*
-            Console.WriteLine("Directory.GetCurrentDirectory:" + System.IO.Directory.GetCurrentDirectory());
-            Console.WriteLine($"Launched from {Environment.CurrentDirectory}");
-            Console.WriteLine($"Physical location {AppDomain.CurrentDomain.BaseDirectory}");
-            Console.WriteLine($"AppContext.BaseDir {AppContext.BaseDirectory}");            
-            Console.WriteLine($"Runtime Call {Path.GetDirectoryName(System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName)}" + Path.DirectorySeparatorChar);
-            */
+            return result;            
         }
 
     }

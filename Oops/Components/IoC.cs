@@ -15,6 +15,7 @@ namespace Oops.Components
             var builder = new ContainerBuilder();
             builder.RegisterType<MqttService>().As<IMqttService>().SingleInstance();
             builder.RegisterInstance(new ErrorDao());
+            builder.RegisterInstance(new LogDao());
             builder.RegisterInstance(new MemoryCache(new MemoryCacheOptions() { }));
             container = builder.Build();
         }

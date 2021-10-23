@@ -20,6 +20,9 @@
     <None Update="assets\index.html">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="assets\log.html">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>	
     <None Update="assets\site.css">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

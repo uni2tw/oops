@@ -19,7 +19,8 @@ namespace Oops.Services
         public static System.Collections.Concurrent.ConcurrentDictionary<string, DateTime> clientIds
             = new System.Collections.Concurrent.ConcurrentDictionary<string, DateTime>();
         IMqttServer mqttServer = new MqttFactory().CreateMqttServer();
-        ErrorDao dao = IoC.Get<ErrorDao>();
+        ErrorDao errorDao = IoC.Get<ErrorDao>();
+        LogDao logDao = IoC.Get<LogDao>();
 
         public void Start()
         {
@@ -40,9 +41,9 @@ namespace Oops.Services
                     DateTime temp;
                     clientIds.TryRemove(args.ClientId, out temp);
                 }
-            });
+            });            
             mqttServer.UseApplicationMessageReceivedHandler(
-                delegate (MqttApplicationMessageReceivedEventArgs eventArgs)
+                async delegate (MqttApplicationMessageReceivedEventArgs eventArgs)
                 {
                     string topic = eventArgs.ApplicationMessage.Topic;
                     if (topic != null && topic.StartsWith(_BROADCAST_TOPIC_PREFIX))
@@ -50,22 +51,32 @@ namespace Oops.Services
                         return;
                     }
 
-                    string str =
-                        Encoding.UTF8.GetString(eventArgs.ApplicationMessage.Payload);
+                    if (topic == "log")
+                    {
+                        string payload =
+                            Encoding.UTF8.GetString(eventArgs.ApplicationMessage.Payload);
 
-                    Error error = System.Text.Json.JsonSerializer.Deserialize<Error>(str);
-                    error.PrppareJson();
-                    error.Application = topic;
-                    Console.WriteLine("message: " + error.Message);
-                    Console.WriteLine("source: " + error.Source);
-                    Console.WriteLine("host: " + error.HostName);
-                    Console.WriteLine("time: " + error.Time);
-                    //dao.InsertErrorLog(error);
-                    dao.InsertErrorLogAsync(error);
-                    // Handle event
-                    //mqttServer.
-                    //var clistatus = mqttServer.GetClientStatusAsync().Result;
-                    //mqttServer.PublishAsync(_BROADCAST_TOPIC_PREFIX + topic, str);                    
+                        Log log = System.Text.Json.JsonSerializer.Deserialize<Log>(payload);
+                        
+                        Console.WriteLine("message: " + log.ToString());                        
+
+                        await logDao.InsertLogAsaync(log);
+                    }
+                    else
+                    {
+                        string str =
+                            Encoding.UTF8.GetString(eventArgs.ApplicationMessage.Payload);
+
+                        Error error = System.Text.Json.JsonSerializer.Deserialize<Error>(str);
+                        error.PrppareJson();
+                        error.Application = topic;
+                        Console.WriteLine("message: " + error.Message);
+                        Console.WriteLine("source: " + error.Source);
+                        Console.WriteLine("host: " + error.HostName);
+                        Console.WriteLine("time: " + error.Time);
+
+                        await errorDao.InsertErrorLogAsync(error);
+                    }
                 });
             mqttServer.StartAsync(new MqttServerOptions()).Wait();
 

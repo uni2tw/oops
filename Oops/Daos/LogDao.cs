@@ -15,12 +15,12 @@ namespace Oops.Daos
 {
     public class LogDao : DaoBase
     {
-        public bool InsertLog(Log log)
+        public async Task<bool> InsertLogAsaync(Log log)
         {
             using (IDbConnection conn = new SQLiteConnection(LoadConnectString()))
             {
                 conn.Open();
-                var count = conn.Insert(log);
+                var count = await conn.InsertAsync(log);
 
                 return count > 0;
             }
