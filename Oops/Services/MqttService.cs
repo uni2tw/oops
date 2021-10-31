@@ -56,7 +56,7 @@ namespace Oops.Services
                         string payload =
                             Encoding.UTF8.GetString(eventArgs.ApplicationMessage.Payload);
 
-                        Log log = System.Text.Json.JsonSerializer.Deserialize<Log>(payload);
+                        OopsLog log = System.Text.Json.JsonSerializer.Deserialize<OopsLog>(payload);
                         
                         Console.WriteLine("message: " + log.ToString());                        
 

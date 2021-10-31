@@ -9,6 +9,7 @@ using Oops.Services;
 using Oops.DataModels;
 using Oops.ViewModels;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Options;
 
 namespace Oops.WebAPIs
 {
@@ -30,13 +31,35 @@ namespace Oops.WebAPIs
         }
 
         [HttpGet]
-        [Route("/api/mqtt")]
-        public dynamic MqttMessageTest(string message)
+        [Route("/api/test/log")]
+        public dynamic MqttTestSendLog([FromQuery]string message)
+        {
+            var oopsClient = new OopsClient();
+            try
+            {
+                oopsClient.Start("localhost", "test").Wait();
+                oopsClient.PushLog("dev", "unk", 1 , "test", message);
+                oopsClient.Stop();
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new
+            {
+
+                message = message
+            };
+
+        }
+
+        [HttpGet]
+        [Route("/api/test/error")]
+        public dynamic MqttMessageTestError(string message)
         {
             var oopsClient = new OopsClient();            
             try
             {
-
                 oopsClient.Start("localhost", "test").Wait();
                 oopsClient.Push(message);
                 oopsClient.Stop();                
@@ -60,9 +83,70 @@ namespace Oops.WebAPIs
             return Redirect("/oops/index.html");
             //return Redirect("https:/google.com");
         }
+
+        [HttpGet]
+        [Route("api/logs")]
+        public async Task<dynamic> GetLogs([FromQuery] GetLogsModel model)
+        {
+            if (model == null)
+            {
+                return BadRequest();
+            }
+            int page = model.page ?? 1;
+            int pageSize = model.page_size ?? 200;
+
+            int currentPage = 0;
+            int totalPages = 0;
+            int totalRows = 0;
+            try
+            {
+                LogsResponse response = await new LogDao().GetLogs(model.service, model.logger, model.date, page, pageSize);
+                var logs = response.Logs.ToList();
+                currentPage = response.CurrentPage;
+                totalPages = response.TotalPage;
+                totalRows = response.TotalRows;
+
+                int startRow = (currentPage - 1) * pageSize + 1;
+                int endRow = currentPage* pageSize;
+                if (endRow > totalRows) endRow = totalRows;
+                return Ok(new
+                {
+                    logs,
+                    pagerInfo = new
+                    {                        
+                        currentPage,
+                        totalPages,
+                        totalRows,
+                        startRow = startRow,
+                        endRow = endRow
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.ToString());                
+            }
+        }
+
+        [HttpGet]
+        [Route("api/options")]
+        public async Task<dynamic> GetOptions()
+        {
+            new LogDao().GetOptions(out List<string> services, out List<string> loggers, out List<string> dates);
+            return Ok(new
+            {
+                services,
+                loggers,
+                dates
+            });
+        }
+
+            
+
+
         [HttpPost]
-        [Route("api/getLogs")]
-        public async Task<dynamic> GetLogs([FromBody]GetLogsModel model)
+        [Route("api/get_errors")]
+        public async Task<dynamic> GetErrors([FromBody]GetErrorsModel model)
         {
             if (model == null)
             {
@@ -77,7 +161,7 @@ namespace Oops.WebAPIs
             List<ErrorModel> logs;
             if (string.IsNullOrEmpty(model.sql))
             {
-                var response = await dao.GetLogs(model.app, page ?? 1, pageSize ?? 20);
+                ErrorsResponse response = await dao.GetLogs(model.app, page ?? 1, pageSize ?? 20);
                 logs = response.Errors
                     .Select(t => new ErrorModel
                     {
@@ -122,8 +206,8 @@ namespace Oops.WebAPIs
         }
 
         [HttpPost]
-        [Route("api/getLog")]
-        public dynamic GetLog([FromBody]GetLogModel model)
+        [Route("api/get_error")]
+        public dynamic GetError([FromBody]GetErrorModel model)
         {
             if (model == null || model.id == 0)
             {
@@ -160,15 +244,17 @@ namespace Oops.WebAPIs
             return Ok(applications);
         }
 
-        // [HttpGet]
-        // [Route("api/clients")]
-        // public dynamic GetGetClients()
-        // {
-        //     List<string> clients = Program.clientIds.Keys.ToList();
-        //     return Ok(clients);
-        // }
-
         public class GetLogsModel
+        {
+            public string service { get; set; }
+            public string logger { get; set; }
+            public string date { get; set; }
+            public int? page { get; set; }
+            public int? page_size { get; set; }            
+        }
+
+
+        public class GetErrorsModel
         {
             public string app { get; set; }
             public int? page { get; set; }
@@ -176,7 +262,7 @@ namespace Oops.WebAPIs
             public string sql { get; set; }
         }
 
-        public class GetLogModel
+        public class GetErrorModel
         {
             public int id { get; set; }
         }        

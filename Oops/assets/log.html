@@ -1,113 +1,482 @@
-<!DOCTYPE html
-          PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-
+<html>
 <head>
-    <meta name="viewport" content="width=device-width initial-scale=1.0" />
-    <meta charset="utf-8">
-    <title>
-        日誌中心
-    </title>
-    
-    <link rel="stylesheet" type="text/css" href="site.css?v=3">
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<title>日誌</title>
+	<script type="text/javascript"
+			src="http://ajax.microsoft.com/ajax/jquery/jquery-1.4.2.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/vue@3.2.20"></script>
+	<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+	<script src="https://momentjs.com/downloads/moment.js"></script>
 
-    <script type="text/javascript" src="http://ajax.microsoft.com/ajax/jquery/jquery-1.4.2.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.0"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue-router/3.1.3/vue-router.min.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.19.0/axios.min.js"></script>
-    <link rel="alternate" type="application/rss+xml" title="RSS" href="/oops.axd/rss" />
+	<style>
+		body {
+			font-family: Verdana;
+			font-size: 70%;
+			background-color: #fff;
+		}
+
+		button,
+		input {
+			font-size: 100%;
+		}
+
+		a {
+			color: #0033cc;
+		}
+
+			a:visited {
+				color: Navy;
+			}
+
+			a:hover {
+				color: #ff6600;
+			}
+
+		img {
+			border: none;
+		}
+
+		pre,
+		code {
+			font-family: "Courier New", Courier;
+		}
+
+		table {
+			width: 100%;
+			border-collapse: collapse;
+			table-layout: fixed;
+		}
+
+		td {
+			border: solid 1px silver;
+			padding: 0.4em;
+			vertical-align: top;
+		}
+
+		th {
+			text-align: left;
+			background-color: #0a6cce;
+			padding: 0.4em;
+			color: White;
+			vertical-align: top;
+			border: solid 1px silver;
+		}
+
+		.odd-row {
+			background-color: #e9e9e9;
+		}
+
+		.available-col {
+			width: 160px;
+			word-break: break-word;
+		}
+
+		.total-col {
+			width: 160px;
+			word-break: break-word;
+		}
+
+		.level2 {
+		}
+
+		.level3, .level4, .level5 {
+			font-weight: bold;
+			color: red;
+		}
+
+		.id-col {
+			width: 40px;
+			font-size: 0.8rem;
+		}
+
+		.env-col {
+			width: 40px;
+			font-size: 0.8rem;
+		}
+
+		.service-col {
+			width: 40px;
+			font-size: 0.8rem;
+		}
+
+		.host-col {
+			width: 100px;
+		}
+
+		.logger-col {
+			width: 200px;
+			word-break: break-all;
+		}
+
+		.level-col {
+			width: 100px;
+		}
+
+		.message-col {
+			width: 400px;
+			word-break: break-all;
+		}
+
+		.date-col,
+		.time-col {
+			text-align: center;
+			width: 50px;
+			font-size: 0.8rem;
+		}
+
+		#ErrorDetail {
+			font-size: 110%;
+			background-color: #ffffcc;
+			padding: 1em;
+			width: 100%;
+		}
+
+		@media screen {
+			#ErrorDetail {
+				overflow: scroll;
+			}
+		}
+
+		#ErrorTitle {
+			font-weight: bold;
+			font-size: 120%;
+		}
+
+		#ErrorType,
+		#ErrorMessage {
+			display: block;
+		}
+
+		#ErrorTypeMessageSeparator {
+			display: none;
+		}
+
+		.key-col {
+			font-weight: bold;
+		}
+
+		h1 {
+			font-family: Verdana;
+			font-weight: normal;
+			color: #0a6cce;
+			font-size: 175%;
+		}
+
+		.table-caption {
+			background-color: navy;
+			margin: 0;
+			color: white;
+			padding: 0.4em;
+			font-weight: bold;
+		}
+
+		@media screen {
+			.scroll-view {
+				width: 100%;
+				overflow: scroll;
+			}
+		}
+
+		#SpeedList {
+			margin: 0;
+			list-style-type: none;
+			text-transform: uppercase;
+			font-size: 80%;
+			padding: 0.25em 0;
+			color: #fff;
+			background-color: #aaa;
+			border-top: solid 1px #aaa;
+			border-bottom: solid 1px #aaa;
+		}
+
+			#SpeedList a {
+				text-decoration: none;
+				padding: 0.25em 1em;
+				border: solid 1px #aaa;
+				border-right: solid 1px #fff;
+				color: #fff;
+			}
+
+				#SpeedList a:hover {
+					background-color: #fff;
+					color: #444;
+					border: solid 1px #aaa;
+				}
+
+			#SpeedList li {
+				display: inline;
+			}
+
+		.alert-warning {
+			color: red;
+		}
+
+		.notice {
+			font-weight:bold;
+		}
+
+		@media print {
+			#SpeedList {
+				display: none;
+			}
+		}
+	</style>
 </head>
-
 <body>
-    <div id="app">
-        <h1 id="PageTitle">
-            {{pageTitle}}            
-        </h1>
-        <ul id="SpeedList">
-            <li v-if="mode==1"><a href="javascript:void(0)" v-on:click="listPage()" title="List of logged errors">ERRORS</a></li>
-            <li><a href="javascript:void(0)" v-on:click="queryBySql()" title="Query by sql script">Sql</a></li>
-            <li><a href="javascript:void(0)" v-on:click="helpPage()" title="Documentation, discussions, issues and more">Help</a></li>
-            <li><a href="javascript:void(0)" v-on:click="aboutPage()" title="Information about this version and build">About</a></li>
-        </ul>
-        <div v-show="mode==0" class="oops-list" style="position:relative">
-            <div style="display:flex; justify-content:space-between; margin:1em 0em">
-                <div>
-                    Errors {{startRow}} to {{endRow}} of total {{totalRows}} (page {{page}} of {{totalPages}}). Start with
-                    <a href="javascript:void(0)" v-on:click="listPage(20)" rel="start">20</a>,
-                    <a href="javascript:void(0)" v-on:click="listPage(50)" rel="start">50</a>,
-                    <a href="javascript:void(0)" v-on:click="listPage(100)" rel="start">100</a> or
-                    <a href="javascript:void(0)" v-on:click="listPage(200)" rel="start">200</a> errors per page.
-                </div>
-                <div>
-                    <!--<select>
-            <option value="1">today</option>
-            <option value="7">week</option>
-            <option value="30">month</option>
-            <option value="">all</option>
-        </select>-->
-                    reload: <select v-model="reloadMode" v-on:change="onReloadModeChange($event)">
-                        <option value="0">no</option>
-                        <option value="10">10 secs</option>
-                        <option value="60">1 minute</option>
-                        <option value="3600">1 hour</option>
-                    </select>
-                </div>
-            </div>
-            <table id="ErrorLog" cellspacing="0" style="border-collapse:collapse;">
-                <tr>
-                    <th class="app-col">App</th>
-                    <th class="host-col">Host</th>
-                    <th class="code-col">Code</th>
-                    <th class="type-col">Type</th>
-                    <th class="url-col">Url</th>
-                    <th class="error-col error-hd"><span>Error</span><select style="display:none"></select></th>
-                    <th class="user-col">User</th>
-                    <th class="date-col">Date</th>
-                    <th class="time-col">Time</th>
-                </tr>
-                <tr v-for="(log, idx) in logs" :class="{'even-row': idx % 2 == 0, 'odd-row': idx % 2 == 1 }">
-                    <td class="app-col">{{log.app}}</td>
-                    <td class="host-col">{{log.host}}</td>
-                    <td class="code-col"><span title="Bad Request">{{log.code}}</span></td>
-                    <td class="type-col">
-                        <span title="System.Web.HttpException">{{log.type}}</span>
-                    </td>
-                    <td class="url-col">{{log.url}}</td>
-                    <td class="error-col">{{log.error}}<a href="javascript:void(0)" v-on:click="detailPage(log.id)" style="margin-left:8px">Details...</a></td>
-                    <td class="user-col">{{log.user}}</td>
-                    <td class="date-col">{{log.date}}</td>
-                    <td class="time-col">{{log.time}}</td>
-                </tr>
-            </table>
-            <p>
-                <span v-if="page==1">
-                    <a href="javascript:void(0)" v-on:click="nextPage()" rel="next">Next errors</a>
-                </span>
-                <span v-else-if="page==totalPages">
-                    <a href="javascript:void(0)" v-on:click="firstPage()" rel="start">Back to first page</a>
-                </span>
-                <span v-else>
-                    <a href="javascript:void(0)" v-on:click="nextPage()" rel="next">Next errors</a>
-                    ; 
-                   <a href="javascript:void(0)" v-on:click="firstPage()" rel="start">Back to first page</a>
-               </span>
-            </p>
-            <p id="Footer">
-                <span>
-                    Powered by <a href="http://www.17life.com/" target="_blank">17Life-Customized</a>, version 0.0.1
-                    Copyright (c) 2020, Unicorn Liu. All rights reserved. Licensed under <a href="https://www.tldrlegal.com/l/mit">MIT License</a>.
-                </span>This log is provided by the Sqlite Error Log.
-            </p>
-        </div>        
-    </div>
+	<div id="app">
+		<h1 id="PageTitle">{{pageTitle}}</h1>
+		<ul id="SpeedList">
+			<li v-if="mode==1">
+				<a href="javascript:void(0)"
+				   v-on:click="listPage()"
+				   title="List of logged errors">ERRORS</a>
+			</li>
+			<li>
+				<a href="javascript:void(0)"
+				   v-on:click="helpPage()"
+				   title="Documentation, discussions, issues and more">Help</a>
+			</li>
+			<li>
+				<a href="javascript:void(0)"
+				   v-on:click="aboutPage()"
+				   title="Information about this version and build">About</a>
+			</li>
+			<li style="float:right">
 
-    <script type="text/javascript">
+			</li>
+		</ul>
+		<div class="oops-list" style="position: relative">
+			<div style="display: flex; justify-content: space-between; margin: 1em 0em">
+				<div style="padding-top:3px">
+					Items {{pagerInfo.start_row}} to {{pagerInfo.end_row}} of total {{pagerInfo.total_rows}} (page
+					{{pagerInfo.current_page}} of {{pagerInfo.total_pages}}). Start with
+					<a href="javascript:void(0)" v-on:click="listPage(200)" rel="start" :class="{'notice': this.pageSize == 200}">200</a>,
+					<a href="javascript:void(0)" v-on:click="listPage(500)" rel="start" :class="{'notice': this.pageSize == 500}">500</a>,
+					<a href="javascript:void(0)" v-on:click="listPage(1000)" rel="start" :class="{'notice': this.pageSize == 1000}">1000</a>
+					or
+					<a href="javascript:void(0)" v-on:click="listPage(2000)" rel="start" ::class="{'notice': this.pageSize == 2000}">2000</a>
+					items per page.
+				</div>
+				<div style="display:flex">
+					<div style="padding:2px">
+						Service:
+						<select v-model="serviceValue">
+							<option value=""></option>
+							<option v-for="opt in serviceOptions" :value="opt">{{opt}}</option>
+						</select>
+					</div>
+					<div style="padding:2px">
+						Logger:
+						<select v-model="loggerValue">
+							<option value=""></option>
+							<option v-for="opt in loggerOptions" :value="opt">{{opt}}</option>
+						</select>
+					</div>
+					<div style="padding:2px">
+						Date:
+						<select v-model="dateValue">
+							<option value=""></option>
+							<option v-for="opt in dateOptions" :value="opt">{{opt}}</option>
+						</select>
+					</div>
+					<div style="padding:2px">
+						reload:
+						<select v-model="reloadMode">
+							<option value="0">no</option>
+							<option value="10" selected>10 secs</option>
+							<option value="60">1 minute</option>
+							<option value="3600">1 hour</option>
+						</select>
+					</div>
+				</div>
+			</div>
+			<table id="ErrorLog" cellspacing="0" style="border-collapse: collapse">
+				<tr>
+					<th class="id-col">Id</th>
+					<th class="env-col">Env</th>
+					<th class="service-col">Service</th>
+					<th class="host-col">Host</th>
+					<th class="logger-col">Logger</th>
+					<th class="message-col">Message</th>
+					<th class="date-col">Date</th>
+					<th class="time-col">Time</th>
+				</tr>
+				<tr v-for="(item, idx) in items"
+					:class="{'even-row': idx % 2 == 0, 'odd-row': idx % 2 == 1, 'level0': item.level==0, 'level1': item.level==1,'level2': item.level==2,'level3': item.level==3,'level4': item.level==4,'level5': item.level==5}">
+					<td class="id-col">{{item.id}}</td>
+					<td class="id-col">{{item.env}}</td>
+					<td class="service-col">{{item.srv}}</td>
+					<td class="host-col">{{item.host}}</td>
+					<td class="logger-col">{{item.logger}}</td>
+					<td class="message-col">{{item.message}}</td>
+					<td class="date-col">{{getDate(item.time)}}</td>
+					<td class="time-col">{{getTime(item.time)}}</td>
+				</tr>
+			</table>
+			<p>
+				<span v-if="pagerInfo.current_page == 1 && pagerInfo.current_page == pagerInfo.total_pages">
+					
+				</span>
+				<span v-else-if="pagerInfo.current_page == 1 && pagerInfo.current_page < pagerInfo.total_pages">
+					<a href="javascript:void(0)" v-on:click="nextPage()" rel="next">下一頁</a>
+				</span>
+				<span v-else-if="pagerInfo.current_page > 1 && pagerInfo.current_page == pagerInfo.total_pages">
+					<a href="javascript:void(0)" v-on:click="firstPage()" rel="start">第一頁</a>
+				</span>
+				<span v-else>
+					<a href="javascript:void(0)" v-on:click="nextPage()" rel="next">下一頁</a>
+					;
+					<a href="javascript:void(0)" v-on:click="firstPage()" rel="start">第一頁</a>
+				</span>
+			</p>
+		</div>
+	</div>
 
-        var router = new VueRouter({
-            mode: 'history'
-        });
-       
-    </script>
+	<script type="text/javascript">
+		const app = Vue.createApp({
+			data: function () {
+				return {
+					pageTitle: "日誌",
+					pageSize: 200,
+					page: 1,
+					startRow: "",
+					pagerInfo: {},
+					endRow: "",
+					totalRows: "",					
+					items: [],
+					apiRoot: "/",
+					loggerValue: '',
+					loggerOptions: [],
+					serviceValue: '',
+					serviceOptions: [],
+					dateValue: '',
+					dateOptions: [],
+					timer: null,
+					reloadMode: 0
+				};
+			},
+			watch: {
+				reloadMode: function (newVal, oldVal) {
+					console.log('onReload.' + newVal + ',' + oldVal);
+					window.localStorage.setItem("reloadMode", newVal);
+					this.reloadMode = newVal || 0;
+					this.setReload();
+				},
+				serviceValue: {
+					handler: function (newVal, oldVal) {
+						window.localStorage.setItem("serviceValue", newVal);
+					}
+				},
+				loggerValue: {
+					handler: function (newVal, oldVal) {
+						window.localStorage.setItem("loggerValue", newVal);
+					}
+				},
+				dateValue: {
+					handler: function (newVal, oldVal) {
+						window.localStorage.setItem("dateValue", newVal);
+					}
+				},
+				pageSize: {
+					handler: function (newVal, oldVal) {
+						window.localStorage.setItem("pageSize", newVal);
+					}
+				}
+			},
+			created: function () {
+				let m = new window.moment();
+				m.utcOffset("08:00");
+				this.moment = m;
+			},
+			mounted: function () {
+				this.reloadMode = parseInt(window.localStorage.getItem('reloadMode'), 10) || 10;
+				this.serviceValue = window.localStorage.getItem('serviceValue') ?? '';
+				this.loggerValue = window.localStorage.getItem('loggerValue') ?? '';
+				this.dateValue = window.localStorage.getItem('dateValue') ?? '';
+				this.pageSize = parseInt(window.localStorage.getItem('pageSize'), 10) || 200;
+
+				console.log('reloadMode:' + this.reloadMode);
+				this.getLogs();
+				this.getOptions();
+			},
+			methods: {
+				getDate(t) {
+					return t.substr(0, 10);
+				},
+				getTime(t) {
+					return t.substr(11, 8);
+				},
+				getLogs() {
+					console.log('getLogs...');
+					var paras = [];
+					let service = this.serviceValue;
+					let logger = this.loggerValue;
+					let date = this.dateValue;
+					if (service) {
+						paras.push('service=' + service);
+					}
+					if (logger) {
+						paras.push('logger=' + logger);
+					}
+					if (date) {
+						paras.push('date=' + date);
+					}
+					if (this.page != 1) {
+						paras.push('page=' + this.page);
+					}
+					if (this.pageSize != 200) {
+						paras.push('page_size=' + this.pageSize);
+					}
+					let url = "/api/logs";
+					if (paras.length > 0) {
+						url = url + "?" + paras.join("&");
+					}
+					axios.get(url).then((response) => {
+						// handle success
+						let data = response.data;
+						this.items = data.logs;
+
+						this.pagerInfo = response.data.pager_info;
+
+						console.log(response);
+					});
+				},
+				getOptions() {
+					console.log('getOptions...');
+					const url = "/api/options";
+					axios.get(url).then((response) => {
+						// handle success
+						let data = response.data;
+
+						this.serviceOptions = data.services;
+						this.loggerOptions = data.loggers;
+						this.dateOptions = data.dates;
+
+						console.log(response);
+					});
+				},
+				listPage(pageSize) {
+					this.pageSize = pageSize;
+					this.getLogs();
+				},
+				prompt() {
+					this.msg = "快來看這裡！我是新訊息！";
+				},
+				setReload: function () {
+					const self = this;
+					if (this.timer != null) {
+						window.clearTimeout(this.timer);
+					}
+					if (this.reloadMode != 0) {
+						console.log("reset interval every " + this.reloadMode + " seconds.");
+						this.timer = window.setInterval(function () {
+							self.getLogs();
+						}, this.reloadMode * 1000)
+					}
+				},
+
+			},
+		}).mount("#app");
+	</script>
 </body>
-
 </html>

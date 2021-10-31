@@ -11,7 +11,7 @@ namespace Oops.Daos
                 System.IO.Directory.CreateDirectory(dbDir);
             }            
             string dbFilePath = System.IO.Path.Combine(dbDir, "my.db");
-            return string.Format(@"data source={0};version=3;", dbFilePath);
+            return string.Format(@"data source={0};version=3;PRAGMA journal_mode=WAL;", dbFilePath);
         }
     }
 

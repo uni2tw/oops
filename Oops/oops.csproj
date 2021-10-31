@@ -11,10 +11,14 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Dapper.Contrib" Version="2.0.78" />
+    <PackageReference Include="Lucene.Net" Version="4.8.0-beta00014" />
+    <PackageReference Include="Lucene.Net.Analysis.Common" Version="4.8.0-beta00014" />
+    <PackageReference Include="Lucene.Net.QueryParser" Version="4.8.0-beta00014" />
     <PackageReference Include="MQTTnet" Version="3.0.16" />
     <PackageReference Include="System.Data.SQLite" Version="1.0.115" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.0-rc.2.21480.5" />
     <PackageReference Include="Autofac" Version="6.3.0" />
+    <PackageReference Include="System.Runtime.Caching" Version="5.0.0" />
   </ItemGroup>
   <ItemGroup>
     <None Update="assets\index.html">

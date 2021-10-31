@@ -151,4 +151,13 @@ namespace Oops.Daos
         public int TotalRows { get; set; }
     }
 
+    public class LogsResponse
+    {
+        public List<OopsLog> Logs { get; set; }
+
+        public int CurrentPage { get; set; }
+        public int TotalPage { get; set; }
+        public int TotalRows { get; set; }
+    }
+
 }

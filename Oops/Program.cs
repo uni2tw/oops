@@ -18,6 +18,11 @@ namespace Oops
     {
         static void Main(string[] args)
         {
+            if (args.Length > 0)
+            {
+                Helper.SetRoot(args[0].Trim('\'', '"'));
+            }
+
             Console.WriteLine(Helper.MapPath("assets"));
 
             IoC.Register();
@@ -28,14 +33,23 @@ namespace Oops
             DbUtil.EnsureIndex<Error>(dao.LoadConnectString(), "Time");
             DbUtil.EnsureIndex<Error>(dao.LoadConnectString(), "Application", "Time");
 
-            DbUtil.EnsureTable<Log>(dao.LoadConnectString());
-            DbUtil.EnsureIndex<Log>(dao.LoadConnectString(), "SrvCode", "LoggerName");
-            DbUtil.EnsureIndex<Log>(dao.LoadConnectString(), "SrvCode", "LoggerName", "Date", "Time");
-            DbUtil.EnsureIndex<Log>(dao.LoadConnectString(), "SrvCode", "LoggerName", "Time");
-            DbUtil.EnsureIndex<Log>(dao.LoadConnectString(), "LoggerName", "Date", "Time");
-            DbUtil.EnsureIndex<Log>(dao.LoadConnectString(), "LoggerName", "Time");
+            DbUtil.EnsureTable<OopsLog>(dao.LoadConnectString());
+
+     
+
+            DbUtil.EnsureIndex<OopsLog>(dao.LoadConnectString(), nameof(OopsLog.Date), nameof(OopsLog.Srv), nameof(OopsLog.Logger));
+            DbUtil.EnsureIndex<OopsLog>(dao.LoadConnectString(), nameof(OopsLog.Date), nameof(OopsLog.Logger), nameof(OopsLog.Srv));
+            DbUtil.EnsureIndex<OopsLog>(dao.LoadConnectString(), nameof(OopsLog.Srv), nameof(OopsLog.Date));
+            DbUtil.EnsureIndex<OopsLog>(dao.LoadConnectString(), nameof(OopsLog.Srv), nameof(OopsLog.Level), nameof(OopsLog.Date));
+            DbUtil.EnsureIndex<OopsLog>(dao.LoadConnectString(), nameof(OopsLog.Srv), nameof(OopsLog.Logger), nameof(OopsLog.Level), nameof(OopsLog.Date));
+            DbUtil.EnsureIndex<OopsLog>(dao.LoadConnectString(), nameof(OopsLog.Srv), nameof(OopsLog.Logger), nameof(OopsLog.Date));            
+            DbUtil.EnsureIndex<OopsLog>(dao.LoadConnectString(), nameof(OopsLog.Logger), nameof(OopsLog.Date));
+            DbUtil.EnsureIndex<OopsLog>(dao.LoadConnectString(), nameof(OopsLog.Logger), nameof(OopsLog.Level), nameof(OopsLog.Date));
+            DbUtil.EnsureIndex<OopsLog>(dao.LoadConnectString(), nameof(OopsLog.Logger), nameof(OopsLog.Srv), nameof(OopsLog.Date));
 
             IoC.Get<IMqttService>().Start();
+
+            OopsOptionsProvider.Current.Start();
 
             var host = Host.CreateDefaultBuilder()                
                 .ConfigureWebHost(cfg =>
@@ -50,6 +64,8 @@ namespace Oops
             host.Run();
 
             IoC.Get<IMqttService>().Stop();
+
+            OopsOptionsProvider.Current.Stop();
 
         }
     }

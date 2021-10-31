@@ -24,5 +24,9 @@ namespace Oops.Components
             return result;            
         }
 
+        public static void SetRoot(string rootPath)
+        {
+            _rootPath = rootPath;
+        }
     }
 }

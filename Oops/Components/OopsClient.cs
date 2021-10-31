@@ -21,7 +21,7 @@ namespace Oops.Components
             mqttClient = factory.CreateMqttClient() as MqttClient;
             this.topic = topic ?? "Undefined";
 
-            var options = new MqttClientOptionsBuilder()
+            var options = new MqttClientOptionsBuilder()                
                 .WithClientId(Environment.MachineName + "." + topic)
                 .WithTcpServer(host)
                 .Build();
@@ -68,6 +68,31 @@ namespace Oops.Components
                     mqttClient.PublishAsync(this.topic, System.Text.Json.JsonSerializer.Serialize(error));
                 }
                 catch { }
+            }
+        }
+
+        public void PushLog(string env, string service, int level,string logger, string message)
+        {
+            if (mqttClient != null)
+            {
+                try
+                {
+                    OopsLog log = new OopsLog();
+                    log.Env = env;
+                    log.Srv = service;
+                    log.Host = Environment.MachineName;
+                    log.Level = level;
+                    log.Logger = logger;
+                    log.Time = DateTime.Now;
+                    log.DateHour = log.Time.ToString("yyyyMMddHH");
+                    log.Date = log.Time.ToString("yyyyMMdd");
+                    log.Message = message;
+                    mqttClient.PublishAsync(DataModels.OopsLog._TOPIC, System.Text.Json.JsonSerializer.Serialize(log));
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
             }
         }
 

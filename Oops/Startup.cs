@@ -2,11 +2,9 @@ using System;
 using System.IO;
 using Oops.Components;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
-using Microsoft.Extensions.Hosting;
 
 namespace Oops
 {
@@ -18,6 +16,7 @@ namespace Oops
                 .AddJsonOptions(options =>
                 {
                     options.JsonSerializerOptions.WriteIndented = true;
+                    options.JsonSerializerOptions.PropertyNamingPolicy = new SnakeCaseNamingPolicy();
                 });
 
         }
@@ -36,9 +35,8 @@ namespace Oops
                 RequestPath = new PathString("/oops"),
                 ServeUnknownFileTypes = true
             });
-
-            //app.UseMiddleware<AllowIpMiddleware>();
-
+            
+            //app.UseMiddleware<AllowIpMiddleware>();            
             app.UseRouting();
             app.UseEndpoints(config =>
             {
