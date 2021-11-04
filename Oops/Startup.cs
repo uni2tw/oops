@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
+using Oops.Services.WebSockets;
 
 namespace Oops
 {
@@ -18,9 +19,8 @@ namespace Oops
                     options.JsonSerializerOptions.WriteIndented = true;
                     options.JsonSerializerOptions.PropertyNamingPolicy = new SnakeCaseNamingPolicy();
                 });
-
         }
-        public void Configure(IApplicationBuilder app)
+        public void Configure(IApplicationBuilder app, IServiceProvider serviceProvider)
         {
             string assetsPath = Helper.MapPath("assets");
             if (Directory.Exists(assetsPath) == false)
@@ -36,12 +36,14 @@ namespace Oops
                 ServeUnknownFileTypes = true
             });
             
-            //app.UseMiddleware<AllowIpMiddleware>();            
+            app.UseMiddleware<AllowIpMiddleware>();            
             app.UseRouting();
             app.UseEndpoints(config =>
             {
                 config.MapControllers();
             });
+            app.UseWebSockets();
+            app.MapWebSocketManager("/ws");
         }
     }
 }

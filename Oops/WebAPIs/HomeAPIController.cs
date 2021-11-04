@@ -10,6 +10,8 @@ using Oops.DataModels;
 using Oops.ViewModels;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
+using Autofac.Core;
+using Oops.Services.WebSockets;
 
 namespace Oops.WebAPIs
 {
@@ -100,7 +102,14 @@ namespace Oops.WebAPIs
             int totalRows = 0;
             try
             {
-                LogsResponse response = await new LogDao().GetLogs(model.service, model.logger, model.date, page, pageSize);
+                OopsLogLevel minLevel = OopsLogLevel.Trace;
+                OopsLogLevel maxLevel = OopsLogLevel.Off;
+                if (model.warn_only == 1)
+                {
+                    minLevel = OopsLogLevel.Warn;
+                }
+                LogsResponse response = await new LogDao().GetLogs(
+                    model.service, model.logger, minLevel, maxLevel, model.date, page, pageSize);
                 var logs = response.Logs.ToList();
                 currentPage = response.CurrentPage;
                 totalPages = response.TotalPage;
@@ -141,8 +150,22 @@ namespace Oops.WebAPIs
             });
         }
 
-            
+        [HttpGet]
+        [Route("api/server_info")]
+        public async Task<dynamic> GetServerInfo()
+        {
+            IMqttService mqttService = IoC.Get<IMqttService>();
+            int providerNumber = mqttService.GetClientNumber();
 
+            int viewerNumber = WebSocketEasyMiddleware.GetClientNumber();
+
+            var data = new
+            {
+                ProviderNumber = providerNumber,
+                viewerNumber = viewerNumber
+            };
+            return Ok(data);
+        }
 
         [HttpPost]
         [Route("api/get_errors")]
@@ -249,6 +272,7 @@ namespace Oops.WebAPIs
             public string service { get; set; }
             public string logger { get; set; }
             public string date { get; set; }
+            public int warn_only { get; set; }
             public int? page { get; set; }
             public int? page_size { get; set; }            
         }

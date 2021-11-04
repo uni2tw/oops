@@ -76,24 +76,28 @@
 			word-break: break-word;
 		}
 
-		.level2 {
+		.level0, .level1, .level2 {
 		}
-
-		.level3, .level4, .level5 {
+		.level3 {
+			font-weight: bold;
+			color: blue;
+		}
+		.level4, .level5 {
 			font-weight: bold;
 			color: red;
 		}
-
 		.id-col {
 			width: 40px;
 			font-size: 0.8rem;
 		}
-
 		.env-col {
 			width: 40px;
 			font-size: 0.8rem;
 		}
-
+		.server-info {
+			color: lightgoldenrodyellow;
+			text-transform: capitalize;
+		}
 		.service-col {
 			width: 40px;
 			font-size: 0.8rem;
@@ -101,11 +105,13 @@
 
 		.host-col {
 			width: 100px;
+			font-size: 0.8rem;
 		}
 
 		.logger-col {
 			width: 200px;
 			word-break: break-all;
+			font-size: 0.8rem;
 		}
 
 		.level-col {
@@ -115,6 +121,7 @@
 		.message-col {
 			width: 400px;
 			word-break: break-all;
+			font-size: 0.8rem;
 		}
 
 		.date-col,
@@ -204,7 +211,8 @@
 				}
 
 			#SpeedList li {
-				display: inline;
+				display: inline-block;
+				padding:4px 8px 6px 4px;
 			}
 
 		.alert-warning {
@@ -241,28 +249,44 @@
 				   v-on:click="aboutPage()"
 				   title="Information about this version and build">About</a>
 			</li>
+			<li>
+				<span class="server-info">{{serverInfo}}</span>
+			</li>
 			<li style="float:right">
-
+				reload:
+				<select v-model="reloadMode">
+					<option value="0">no</option>
+					<option value="10" selected>10 secs</option>
+					<option value="60">1 minute</option>
+					<option value="3600">1 hour</option>
+				</select>
+			</li>
+			<li style="float:right">
+				log level:
+				<select v-model="warnOnly">
+					<option value="0"></option>
+					<option value="1">Warn Or Error</option>
+				</select>
 			</li>
 		</ul>
 		<div class="oops-list" style="position: relative">
 			<div style="display: flex; justify-content: space-between; margin: 1em 0em">
 				<div style="padding-top:3px">
 					Items {{pagerInfo.start_row}} to {{pagerInfo.end_row}} of total {{pagerInfo.total_rows}} (page
-					{{pagerInfo.current_page}} of {{pagerInfo.total_pages}}). Start with
+					{{pagerInfo.current_page}} of {{pagerInfo.total_pages}}). <br />Start with
 					<a href="javascript:void(0)" v-on:click="listPage(200)" rel="start" :class="{'notice': this.pageSize == 200}">200</a>,
 					<a href="javascript:void(0)" v-on:click="listPage(500)" rel="start" :class="{'notice': this.pageSize == 500}">500</a>,
 					<a href="javascript:void(0)" v-on:click="listPage(1000)" rel="start" :class="{'notice': this.pageSize == 1000}">1000</a>
 					or
-					<a href="javascript:void(0)" v-on:click="listPage(2000)" rel="start" ::class="{'notice': this.pageSize == 2000}">2000</a>
+					<a href="javascript:void(0)" v-on:click="listPage(2000)" rel="start" :class="{'notice': this.pageSize == 2000}">2000</a>
 					items per page.
 				</div>
-				<div style="display:flex">
+				<div style="display:flex; padding:8px 0px">
 					<div style="padding:2px">
 						Service:
 						<select v-model="serviceValue">
 							<option value=""></option>
-							<option v-for="opt in serviceOptions" :value="opt">{{opt}}</option>
+							<option v-for="opt in serviceOptions" :value="opt">{{friendlyName[opt] ?? opt}}</option>
 						</select>
 					</div>
 					<div style="padding:2px">
@@ -279,15 +303,6 @@
 							<option v-for="opt in dateOptions" :value="opt">{{opt}}</option>
 						</select>
 					</div>
-					<div style="padding:2px">
-						reload:
-						<select v-model="reloadMode">
-							<option value="0">no</option>
-							<option value="10" selected>10 secs</option>
-							<option value="60">1 minute</option>
-							<option value="3600">1 hour</option>
-						</select>
-					</div>
 				</div>
 			</div>
 			<table id="ErrorLog" cellspacing="0" style="border-collapse: collapse">
@@ -302,7 +317,7 @@
 					<th class="time-col">Time</th>
 				</tr>
 				<tr v-for="(item, idx) in items"
-					:class="{'even-row': idx % 2 == 0, 'odd-row': idx % 2 == 1, 'level0': item.level==0, 'level1': item.level==1,'level2': item.level==2,'level3': item.level==3,'level4': item.level==4,'level5': item.level==5}">
+					:class="{'even-row': idx % 2 == 0, 'odd-row': idx % 2 == 1, 'level0': item.level==0, 'level1': item.level==1,'level2': item.level==2,'level3': item.level==3,'level4': item.level==4,'level5': item.level==5,'level6': item.level==6}">
 					<td class="id-col">{{item.id}}</td>
 					<td class="id-col">{{item.env}}</td>
 					<td class="service-col">{{item.srv}}</td>
@@ -315,7 +330,7 @@
 			</table>
 			<p>
 				<span v-if="pagerInfo.current_page == 1 && pagerInfo.current_page == pagerInfo.total_pages">
-					
+
 				</span>
 				<span v-else-if="pagerInfo.current_page == 1 && pagerInfo.current_page < pagerInfo.total_pages">
 					<a href="javascript:void(0)" v-on:click="nextPage()" rel="next">下一頁</a>
@@ -333,26 +348,75 @@
 	</div>
 
 	<script type="text/javascript">
+		function connect() {
+			var ws = new WebSocket("ws://" + location.host + "/ws");
+			ws.onopen = function () {
+				console.log('ws was ready.');
+			};
+
+			ws.onmessage = function (e) {				
+				console.log('ws receive message:', e.data);
+				if (e.data.indexOf(',') != -1) {
+					const provider_number = e.data.split(',')[0];
+					const viewer_number = e.data.split(',')[1];
+					app.serverInfo = provider_number + " Providers, " + viewer_number + " Viewers";					
+				}
+			};
+
+			ws.onclose = function (e) {
+				console.log('ws was closed. reconnect will be attempted in 1 second.', e.reason);
+				setTimeout(function () {
+					connect();
+				}, 1000);
+			};
+
+			ws.onerror = function (err) {
+				console.error('ws encountered error: ', err.message, 'Closing socket');
+				ws.close();
+			};
+		}
+		connect();
+	</script>
+
+	<script type="text/javascript">
 		const app = Vue.createApp({
 			data: function () {
 				return {
 					pageTitle: "日誌",
 					pageSize: 200,
 					page: 1,
-					startRow: "",
 					pagerInfo: {},
-					endRow: "",
-					totalRows: "",					
 					items: [],
 					apiRoot: "/",
+					warnOnly: 0,
 					loggerValue: '',
 					loggerOptions: [],
 					serviceValue: '',
 					serviceOptions: [],
+					friendlyName:
+					{
+						'ath': 'Auth',
+						'mem': 'Member',
+						'mag': 'Manager',
+						'fso': 'File',
+						'pay': 'Payment',
+						'stk': 'Stock',
+						'str': 'Store',
+						'nfy': 'Notify',
+						'sdl': 'Scheduler',
+						'ivo': 'Invoice',
+						'exc': 'Exchange',
+						'ini': 'Initaitor',
+						'gpo': 'GroupOrder',
+						'ord': 'Order',
+						'ref': 'Refund',
+						'prd': 'Product',
+					},
 					dateValue: '',
 					dateOptions: [],
 					timer: null,
-					reloadMode: 0
+					reloadMode: 0,
+					serverInfo: ''
 				};
 			},
 			watch: {
@@ -362,18 +426,25 @@
 					this.reloadMode = newVal || 0;
 					this.setReload();
 				},
+				warnOnly: function (newVal, oldVal) {
+					window.localStorage.setItem("warnOnly", newVal);
+					this.warnOnly = newVal || 0;
+				},
 				serviceValue: {
 					handler: function (newVal, oldVal) {
+						this.page = 1;
 						window.localStorage.setItem("serviceValue", newVal);
 					}
 				},
 				loggerValue: {
 					handler: function (newVal, oldVal) {
+						this.page = 1;
 						window.localStorage.setItem("loggerValue", newVal);
 					}
 				},
 				dateValue: {
 					handler: function (newVal, oldVal) {
+						this.page = 1;
 						window.localStorage.setItem("dateValue", newVal);
 					}
 				},
@@ -390,6 +461,7 @@
 			},
 			mounted: function () {
 				this.reloadMode = parseInt(window.localStorage.getItem('reloadMode'), 10) || 10;
+				this.warnOnly = parseInt(window.localStorage.getItem('warnOnly'), 10) || 0;
 				this.serviceValue = window.localStorage.getItem('serviceValue') ?? '';
 				this.loggerValue = window.localStorage.getItem('loggerValue') ?? '';
 				this.dateValue = window.localStorage.getItem('dateValue') ?? '';
@@ -398,6 +470,7 @@
 				console.log('reloadMode:' + this.reloadMode);
 				this.getLogs();
 				this.getOptions();
+				this.getServerInfo();
 			},
 			methods: {
 				getDate(t) {
@@ -427,6 +500,9 @@
 					if (this.pageSize != 200) {
 						paras.push('page_size=' + this.pageSize);
 					}
+					if (this.warnOnly != 0) {
+						paras.push('warn_only=' + this.warnOnly);
+					}
 					let url = "/api/logs";
 					if (paras.length > 0) {
 						url = url + "?" + paras.join("&");
@@ -437,7 +513,7 @@
 						this.items = data.logs;
 
 						this.pagerInfo = response.data.pager_info;
-
+						this.page = this.pagerInfo.current_page;
 						console.log(response);
 					});
 				},
@@ -455,8 +531,27 @@
 						console.log(response);
 					});
 				},
+				getServerInfo() {
+					console.log('getServerInfo...');
+					const url = "/api/server_info";
+					axios.get(url).then((response) => {
+						// handle success
+						let data = response.data;
+						this.serverInfo = data.provider_number + " Providers, " + data.viewer_number + " Viewers";
+						console.log(response);
+					});
+				},
 				listPage(pageSize) {
 					this.pageSize = pageSize;
+					this.page = 1;
+					this.getLogs();
+				},
+				nextPage() {
+					this.page++;
+					this.getLogs();
+				},
+				firstPage() {
+					this.page = 1;
 					this.getLogs();
 				},
 				prompt() {
@@ -478,5 +573,6 @@
 			},
 		}).mount("#app");
 	</script>
+
 </body>
 </html>

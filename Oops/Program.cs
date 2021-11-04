@@ -34,8 +34,7 @@ namespace Oops
             DbUtil.EnsureIndex<Error>(dao.LoadConnectString(), "Application", "Time");
 
             DbUtil.EnsureTable<OopsLog>(dao.LoadConnectString());
-
-     
+           
 
             DbUtil.EnsureIndex<OopsLog>(dao.LoadConnectString(), nameof(OopsLog.Date), nameof(OopsLog.Srv), nameof(OopsLog.Logger));
             DbUtil.EnsureIndex<OopsLog>(dao.LoadConnectString(), nameof(OopsLog.Date), nameof(OopsLog.Logger), nameof(OopsLog.Srv));
@@ -48,8 +47,6 @@ namespace Oops
             DbUtil.EnsureIndex<OopsLog>(dao.LoadConnectString(), nameof(OopsLog.Logger), nameof(OopsLog.Srv), nameof(OopsLog.Date));
 
             IoC.Get<IMqttService>().Start();
-
-            OopsOptionsProvider.Current.Start();
 
             var host = Host.CreateDefaultBuilder()                
                 .ConfigureWebHost(cfg =>
@@ -64,8 +61,6 @@ namespace Oops
             host.Run();
 
             IoC.Get<IMqttService>().Stop();
-
-            OopsOptionsProvider.Current.Stop();
 
         }
     }

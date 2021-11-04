@@ -12,6 +12,7 @@ namespace Oops.Services
     {
         void Start();
         void Stop();
+        int GetClientNumber();
     }
     public class MqttService : IMqttService
     {
@@ -33,6 +34,7 @@ namespace Oops.Services
                 {
                     clientIds.TryAdd(args.ClientId, DateTime.Now);
                 }
+                Console.WriteLine($"client {args.ClientId} was connected.");
             });
             mqttServer.UseClientDisconnectedHandler(delegate (MqttServerClientDisconnectedEventArgs args)
             {
@@ -41,6 +43,7 @@ namespace Oops.Services
                     DateTime temp;
                     clientIds.TryRemove(args.ClientId, out temp);
                 }
+                Console.WriteLine($"client {args.ClientId} was disconnected.");
             });            
             mqttServer.UseApplicationMessageReceivedHandler(
                 async delegate (MqttApplicationMessageReceivedEventArgs eventArgs)
@@ -86,6 +89,11 @@ namespace Oops.Services
         {
             Console.WriteLine("matt server stopping.");
             mqttServer.StopAsync().Wait();
+        }
+
+        public int GetClientNumber()
+        {
+            return clientIds.Count;
         }
     }
 }

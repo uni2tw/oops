@@ -24,9 +24,7 @@ namespace Oops
         {
             string ip = GetClientIp(context);
             string forwardIp = GetForwardedClientIp(context);
-            if (forwardIp == "211.72.124.67" || forwardIp == "60.251.154.220"
-                || forwardIp == "59.120.193.31"
-                || ip == "0.0.0.1")
+            if (forwardIp == "59.120.143.229" || ip == "59.120.143.229" || ip == "0.0.0.1")
             {
                 await _next(context);
             }
