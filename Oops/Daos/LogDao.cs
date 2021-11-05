@@ -96,22 +96,37 @@ namespace Oops.Daos
                 response.Logs = logs;
 
                 var elapsedSecs = (DateTime.Now - now).TotalSeconds.ToString("0.00");
-                Console.WriteLine($"get logs use {elapsedSecs} secs");
+                Console.WriteLine($"get logs: {elapsedSecs} secs.");
                 return response;
             }
         }
 
-        public void GetOptions(out List<string> services, out List<string> loggers, out List<string> dates)
+        public async Task<GetOptionsResponse> GetOptionsAsync()
         {
-            DateTime now = DateTime.Now;
             using (IDbConnection conn = new SQLiteConnection(LoadConnectString()))
-            {                
-                services = conn.Query<string>("select distinct srv from log order by srv").ToList();
-                loggers = conn.Query<string>("select distinct logger from log order by logger").ToList();
-                dates = conn.Query<string>("select distinct date from log order by date").ToList();
+            {
+                DateTime now = DateTime.Now;
+                var getServicesTask = conn.QueryAsync<string>("select distinct srv from log order by srv");
+                var getLoggersTask = conn.QueryAsync<string>("select distinct logger from log order by logger");
+                var getDatesTask = conn.QueryAsync<string>("select distinct date from log order by date");
+                await Task.WhenAll(getServicesTask, getLoggersTask, getDatesTask);
+                GetOptionsResponse response = new GetOptionsResponse
+                {
+                    Services = getServicesTask.Result.ToList(),
+                    Loggers = getLoggersTask.Result.ToList(),
+                    Dates = getDatesTask.Result.ToList(),
+                };
+                var elapsedSecs = (DateTime.Now - now).TotalSeconds.ToString("0.00");
+                Console.WriteLine($"get options: {elapsedSecs} secs.");
+                return response;
             }
-            var elapsedSecs = (DateTime.Now - now).TotalSeconds.ToString("0.00");
-            Console.WriteLine($"get options: {elapsedSecs}");
+        }
+
+        public class GetOptionsResponse
+        {
+            public List<string> Services { get; set; }
+            public List<string> Loggers { get; set; }
+            public List<string> Dates { get; set; }
         }
     }
 }

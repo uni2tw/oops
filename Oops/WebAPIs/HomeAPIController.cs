@@ -110,7 +110,7 @@ namespace Oops.WebAPIs
                 }
                 LogsResponse response = await new LogDao().GetLogs(
                     model.service, model.logger, minLevel, maxLevel, model.date, page, pageSize);
-                var logs = response.Logs.ToList();
+
                 currentPage = response.CurrentPage;
                 totalPages = response.TotalPage;
                 totalRows = response.TotalRows;
@@ -120,7 +120,7 @@ namespace Oops.WebAPIs
                 if (endRow > totalRows) endRow = totalRows;
                 return Ok(new
                 {
-                    logs,
+                    response.Logs,
                     pagerInfo = new
                     {                        
                         currentPage,
@@ -141,18 +141,13 @@ namespace Oops.WebAPIs
         [Route("api/options")]
         public async Task<dynamic> GetOptions()
         {
-            new LogDao().GetOptions(out List<string> services, out List<string> loggers, out List<string> dates);
-            return Ok(new
-            {
-                services,
-                loggers,
-                dates
-            });
+            var response = await new LogDao().GetOptionsAsync();
+            return Ok(response);
         }
 
         [HttpGet]
         [Route("api/server_info")]
-        public async Task<dynamic> GetServerInfo()
+        public IActionResult GetServerInfo()
         {
             IMqttService mqttService = IoC.Get<IMqttService>();
             int providerNumber = mqttService.GetClientNumber();
