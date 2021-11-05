@@ -110,7 +110,7 @@ namespace Oops.WebAPIs
                 }
                 LogsResponse response = await new LogDao().GetLogs(
                     model.service, model.logger, minLevel, maxLevel, model.date, page, pageSize);
-                var logs = response.Logs.ToList();
+                
                 currentPage = response.CurrentPage;
                 totalPages = response.TotalPage;
                 totalRows = response.TotalRows;
@@ -120,7 +120,7 @@ namespace Oops.WebAPIs
                 if (endRow > totalRows) endRow = totalRows;
                 return Ok(new
                 {
-                    logs,
+                    response.Logs,
                     pagerInfo = new
                     {                        
                         currentPage,
