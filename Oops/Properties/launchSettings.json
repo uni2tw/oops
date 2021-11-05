@@ -2,12 +2,11 @@
   "profiles": {
     "oops": {
       "commandName": "Project",
-      "commandLineArgs": "\"C:\\PXEC\\Backend\\oops\\Oops\"",
       "launchBrowser": true,
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
-      "applicationUrl": "http://localhost:5000"
+      "applicationUrl": "http://localhost:1882",
     }
   }
 }

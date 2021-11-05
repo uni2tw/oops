@@ -21,12 +21,11 @@ namespace Oops
 
             Console.WriteLine(Helper.MapPath("assets"));
 
-            var host = Host.CreateDefaultBuilder()                
+            var host = Host.CreateDefaultBuilder()                                
                 .ConfigureWebHost(cfg =>
-                {
-                    cfg.UseKestrel(option =>
-                    {
-                        option.ListenAnyIP(1882);
+                {                    
+                    cfg.UseKestrel((builderContext, options) =>
+                    {                        
                     });
                     cfg.UseStartup<Startup>();
                 })
@@ -73,5 +72,7 @@ namespace Oops
             IoC.Get<IMqttService>().Stop();
 
         }
+
+
     }
 }
