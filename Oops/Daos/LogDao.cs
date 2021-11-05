@@ -1,6 +1,5 @@
 using Dapper;
 using Dapper.Contrib.Extensions;
-using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -8,11 +7,6 @@ using System.Data.SQLite;
 using System.Linq;
 using System.Threading.Tasks;
 using Oops.DataModels;
-using Oops.ViewModels;
-using Oops.Components;
-using static System.Net.Mime.MediaTypeNames;
-using System.Data.Entity.Infrastructure;
-using System.Data.Entity.Core.Common.CommandTrees.ExpressionBuilder;
 
 namespace Oops.Daos
 {

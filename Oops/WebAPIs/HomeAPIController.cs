@@ -82,7 +82,7 @@ namespace Oops.WebAPIs
         [Route("")]
         public dynamic Home()
         {
-            return Redirect("/oops/index.html");
+            return Redirect("/oops/log.html");
             //return Redirect("https:/google.com");
         }
 
