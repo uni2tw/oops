@@ -17,7 +17,9 @@ namespace Oops.Components
             builder.RegisterInstance(new ErrorDao());
             builder.RegisterInstance(new LogDao());
             builder.RegisterInstance(new MemoryCache(new MemoryCacheOptions() { }));
+            builder.RegisterInstance<IDBConnectionConfig>(new DBConnectionConfig());
             container = builder.Build();
+
         }
 
         public static T Get<T>() where T : class

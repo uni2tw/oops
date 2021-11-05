@@ -3,11 +3,14 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Data;
 using System.Data.SQLite;
+using System.IO;
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Dapper;
 using Dapper.Contrib.Extensions;
+using Oops.Components;
 
 namespace Oops.Daos
 {
@@ -96,6 +99,32 @@ namespace Oops.Daos
                 conn.Open();
                 var count = conn.Execute(sbLog.ToString());
                 return count >= 0;
+            }
+        }
+
+        public static void EnsureDBFile(string connectionString)
+        {
+            string dbfile;
+            try
+            {
+                dbfile = Regex.Match(connectionString, @"data source=([A-Z:\\a-z. ]*);", RegexOptions.IgnoreCase)
+                    .Groups[1].Value;
+            } catch
+            {
+                Console.WriteLine("無法解析 connectionString");
+                throw;
+            }
+            if (File.Exists(dbfile) == false)
+            {
+                try
+                {
+                    SQLiteConnection.CreateFile(dbfile);
+                } 
+                catch (Exception)
+                {
+                    Console.WriteLine("無法建立DB檔案" + dbfile);
+                    throw;
+                }
             }
         }
 

@@ -6,11 +6,20 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Oops.Services.WebSockets;
+using Microsoft.Extensions.Configuration;
+using System.Configuration;
+using Oops.Daos;
 
 namespace Oops
 {
     public class Startup
     {
+        IConfiguration _configuration;
+        public Startup(IConfiguration configuration)
+        {
+            _configuration = configuration;
+        }
+
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers()
@@ -20,7 +29,7 @@ namespace Oops
                     options.JsonSerializerOptions.PropertyNamingPolicy = new SnakeCaseNamingPolicy();
                 });
         }
-        public void Configure(IApplicationBuilder app, IServiceProvider serviceProvider)
+        public void Configure(IApplicationBuilder app)
         {
             string assetsPath = Helper.MapPath("assets");
             if (Directory.Exists(assetsPath) == false)

@@ -2,7 +2,7 @@
   "profiles": {
     "oops": {
       "commandName": "Project",
-      "commandLineArgs": "\"C:\\Git2019\\Utilities\\oops\\Oops\"",
+      "commandLineArgs": "\"C:\\PXEC\\Backend\\oops\\Oops\"",
       "launchBrowser": true,
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
