@@ -107,7 +107,7 @@ namespace Oops.Daos
             string dbfile;
             try
             {
-                dbfile = Regex.Match(connectionString, @"data source=([A-Z:\\a-z. ]*);", RegexOptions.IgnoreCase)
+                dbfile = Regex.Match(connectionString, @"data source=([A-Z: \\a-z0-9.\/]*);", RegexOptions.IgnoreCase)
                     .Groups[1].Value;
             } catch
             {

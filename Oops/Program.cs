@@ -1,4 +1,6 @@
 ﻿using System;
+using System.IO;
+using System.Runtime.InteropServices;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -13,13 +15,8 @@ namespace Oops
     class Program
     {
         static void Main(string[] args)
-        {
-            //if (args.Length > 0)
-            //{
-            //    Helper.SetRoot(args[0].Trim('\'', '"'));
-            //}
-
-            Console.WriteLine(Helper.MapPath("assets"));
+        {         
+            Console.WriteLine("Root " + Helper.MapPath(string.Empty));
 
             var host = Host.CreateDefaultBuilder()                                
                 .ConfigureWebHost(cfg =>
@@ -35,12 +32,12 @@ namespace Oops
 
                     IoC.Register();
 
-                    IConfigurationRoot configurationRoot = new ConfigurationBuilder()
-                        .AddJsonFile(Helper.MapPath("appsettings.json"), false)
+                    cfg.AddConfiguration(new ConfigurationBuilder()
+                        .AddJsonFile("appsettings.json", false)
                         .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true, true)
                         .AddEnvironmentVariables()
-                        .Build();
-                    IoC.Get<IDBConnectionConfig>().ConnectionString = configurationRoot.GetSection("DBSetting:ConnectionString").Value;
+                        .Build());
+                    IoC.Get<IDBConnectionConfig>().ConnectionString = ctx.Configuration.GetSection("DBSetting:ConnectionString").Value;
 
                     ErrorDao dao = IoC.Get<ErrorDao>();
                     Console.WriteLine("LoadConnectString: " + dao.LoadConnectString());
@@ -62,8 +59,6 @@ namespace Oops
                     DbUtil.EnsureIndex<OopsLog>(dao.LoadConnectString(), nameof(OopsLog.Logger), nameof(OopsLog.Srv), nameof(OopsLog.Date));
 
                     IoC.Get<IMqttService>().Start();
-
-                    cfg.AddConfiguration(configurationRoot);
                 })
                 .Build();
 

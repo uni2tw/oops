@@ -44,8 +44,11 @@ namespace Oops
                 RequestPath = new PathString("/oops"),
                 ServeUnknownFileTypes = true
             });
-            
-            app.UseMiddleware<AllowIpMiddleware>();            
+
+            if (_configuration.GetSection("AllowIpMiddleware").GetValue<bool?>("Enabled").GetValueOrDefault())
+            {
+                app.UseMiddleware<AllowIpMiddleware>();
+            }
             app.UseRouting();
             app.UseEndpoints(config =>
             {
