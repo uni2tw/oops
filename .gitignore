@@ -28,3 +28,4 @@ Ankh.NoLoad
 *.tar
 *.zip
 *.db
+/Oops/appsettings.Development.json
