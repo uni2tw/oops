@@ -17,6 +17,9 @@
     <PackageReference Include="System.Runtime.Caching" Version="5.0.0" />
   </ItemGroup>
   <ItemGroup>
+    <Content Update="appsettings.Development.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Update="appsettings.prod.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

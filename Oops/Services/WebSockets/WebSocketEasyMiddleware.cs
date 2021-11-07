@@ -24,6 +24,14 @@ namespace Oops.Services.WebSockets
         {
             _next = next;
             _mqttServer = IoC.Get<IMqttService>();
+
+            if (_mqttServer.OnChanged == null)
+            {
+                _mqttServer.OnChanged = delegate (int provierNumber)
+                {
+                    allSockets.Keys.ToList().ForEach(x => SendMessageAsync(x, $"{provierNumber},{_clientNumber}"));
+                };
+            }
         }
 
         public async Task Invoke(HttpContext context)

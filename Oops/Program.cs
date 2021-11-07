@@ -29,15 +29,16 @@ namespace Oops
                 .ConfigureAppConfiguration((ctx, cfg) =>
                 {
                     var env = ctx.HostingEnvironment;
-
                     IoC.Register();
-
-                    cfg.AddConfiguration(new ConfigurationBuilder()
+                    var confRoot = new ConfigurationBuilder()
                         .AddJsonFile("appsettings.json", false)
                         .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true, true)
                         .AddEnvironmentVariables()
-                        .Build());
-                    IoC.Get<IDBConnectionConfig>().ConnectionString = ctx.Configuration.GetSection("DBSetting:ConnectionString").Value;
+                        .Build();                    
+
+                    cfg.AddConfiguration(confRoot);                    
+                    //IoC.Get<IDBConnectionConfig>().ConnectionString = ctx.Configuration.GetSection("DBSetting:ConnectionString").Value;
+                    IoC.Get<IDBConnectionConfig>().ConnectionString = confRoot.GetSection("DBSetting:ConnectionString").Value;
 
                     ErrorDao dao = IoC.Get<ErrorDao>();
                     Console.WriteLine("LoadConnectString: " + dao.LoadConnectString());

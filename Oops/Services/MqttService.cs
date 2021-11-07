@@ -8,11 +8,14 @@ using Oops.DataModels;
 
 namespace Oops.Services
 {
+    public delegate void OnChangedHandler(int number);
     public interface IMqttService
     {
         void Start();
         void Stop();
         int GetClientNumber();
+
+        OnChangedHandler OnChanged{ get; set; }
     }
     public class MqttService : IMqttService
     {
@@ -22,6 +25,8 @@ namespace Oops.Services
         IMqttServer mqttServer = new MqttFactory().CreateMqttServer();
         ErrorDao errorDao = IoC.Get<ErrorDao>();
         LogDao logDao = IoC.Get<LogDao>();
+
+        public OnChangedHandler OnChanged { get; set; }
 
         public void Start()
         {
@@ -34,6 +39,10 @@ namespace Oops.Services
                 {
                     clientIds.TryAdd(args.ClientId, DateTime.Now);
                 }
+                if (OnChanged != null)
+                {
+                    OnChanged(GetClientNumber());
+                }
                 Console.WriteLine($"client {args.ClientId} was connected.");
             });
             mqttServer.UseClientDisconnectedHandler(delegate (MqttServerClientDisconnectedEventArgs args)
@@ -42,6 +51,10 @@ namespace Oops.Services
                 {
                     DateTime temp;
                     clientIds.TryRemove(args.ClientId, out temp);
+                }
+                if (OnChanged != null)
+                {
+                    OnChanged(GetClientNumber());
                 }
                 Console.WriteLine($"client {args.ClientId} was disconnected.");
             });            
