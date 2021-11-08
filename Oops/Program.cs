@@ -37,7 +37,6 @@ namespace Oops
                         .Build();                    
 
                     cfg.AddConfiguration(confRoot);                    
-                    //IoC.Get<IDBConnectionConfig>().ConnectionString = ctx.Configuration.GetSection("DBSetting:ConnectionString").Value;
                     IoC.Get<IDBConnectionConfig>().ConnectionString = confRoot.GetSection("DBSetting:ConnectionString").Value;
 
                     ErrorDao dao = IoC.Get<ErrorDao>();

@@ -83,7 +83,6 @@ namespace Oops.WebAPIs
         public dynamic Home()
         {
             return Redirect("/oops/log.html");
-            //return Redirect("https:/google.com");
         }
 
         [HttpGet]
@@ -97,9 +96,9 @@ namespace Oops.WebAPIs
             int page = model.page ?? 1;
             int pageSize = model.page_size ?? 200;
 
-            int currentPage = 0;
-            int totalPages = 0;
-            int totalRows = 0;
+            int currentPage;
+            int totalPages;
+            int totalRows;
             try
             {
                 OopsLogLevel minLevel = OopsLogLevel.Trace;
