@@ -7,20 +7,128 @@ using System.Data.SQLite;
 using System.Linq;
 using System.Threading.Tasks;
 using Oops.DataModels;
+using System.Diagnostics;
 
 namespace Oops.Daos
 {
 
     public class LogDao : DaoBase
     {
-        public async Task<bool> InsertLogAsaync(OopsLog log)
+        System.Collections.Concurrent.ConcurrentQueue<OopsLog> pendingLogs = new System.Collections.Concurrent.ConcurrentQueue<OopsLog>();
+        public int GetPendingLogsCount()
         {
+            return pendingLogs.Count;
+        }
+        const int VeryBusyInterval = 100;
+        const int BusyInterval = 1000;
+        const int NormalBusyInterval = 5000;
+        public string GetStatus()
+        {
+            if (timer.Interval == VeryBusyInterval)
+            {
+                return "very_busy";
+            }
+            else if (timer.Interval == BusyInterval)
+            {
+                return "busy";
+            }
+            return "normal";
+        }
+        public System.Timers.Timer timer = new System.Timers.Timer();
+        public LogDao()
+        {
+            timer.Interval = 5000;
+            timer.AutoReset = false;
+            timer.Start();            
+            timer.Elapsed += Timer_Elapsed;
+        }
+        
+        private void Timer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            try
+            {
+                List<OopsLog> logs = new List<OopsLog>();
+                while (pendingLogs.Count > 0 && logs.Count < 1000)
+                {
+                    OopsLog temp;
+                    if (pendingLogs.TryDequeue(out temp))
+                    {
+                        logs.Add(temp);
+                    }
+                }
+                if (logs.Count > 0)
+                {
+                    int effectRows = BulkInert(logs);
+                }
+            }
+            finally
+            {
+                if (pendingLogs.Count > 100000)
+                {
+                    timer.Interval = 100;
+                }
+                else if (pendingLogs.Count > 10000)
+                {
+                    timer.Interval = 1000;
+                }
+                else
+                {
+                    timer.Interval = 5000;
+                }
+                timer.Start();
+
+            }
+        }
+
+        private int BulkInert(List<OopsLog> logs)
+        {
+            return BulkInert2(logs);
+            Stopwatch watch = new Stopwatch();
+            watch.Start();            
+            int count = 0;
+            using (IDbConnection conn = new SQLiteConnection(LoadConnectString()))
+            {
+                conn.Open();
+                foreach (var log in logs)
+                {
+                    if (conn.Insert(log) > 0) { count++; }
+                }
+            }
+            var elapsedSecs = watch.Elapsed.TotalSeconds.ToString("0.00");
+            Console.WriteLine($"put {count} logs: {elapsedSecs} secs.");
+            
+            return count;
+        }
+
+        private int BulkInert2(List<OopsLog> logs)
+        {
+            Stopwatch watch = new Stopwatch();
+            watch.Start();
+            using (SQLiteConnection conn = new SQLiteConnection(LoadConnectString()))
+            {                
+                conn.Open();
+                conn.BulkInsert(logs);
+            }
+            var elapsedSecs = watch.Elapsed.TotalSeconds.ToString("0.00");
+            Console.WriteLine($"put {logs.Count} logs: {elapsedSecs} secs.");
+
+            return logs.Count;
+        }
+
+
+
+        public void InsertLog(OopsLog log)
+        {
+            pendingLogs.Enqueue(log);
+        }
+        public async Task<bool> InsertLogAsaync(OopsLog log)
+        {            
             using (IDbConnection conn = new SQLiteConnection(LoadConnectString()))
             {
                 conn.Open();
                 var count = await conn.InsertAsync(log);
 
-                return count > 0;
+                return count > 0;      
             }
         }
 

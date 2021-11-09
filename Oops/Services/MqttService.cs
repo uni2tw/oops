@@ -74,9 +74,10 @@ namespace Oops.Services
 
                         OopsLog log = System.Text.Json.JsonSerializer.Deserialize<OopsLog>(payload);
                         
-                        Console.WriteLine("message: " + log.ToString());                        
+                        Console.WriteLine("message: " + log.ToString());
 
-                        await logDao.InsertLogAsaync(log);
+                        //await logDao.InsertLogAsaync(log);
+                        logDao.InsertLog(log);
                     }
                     else
                     {

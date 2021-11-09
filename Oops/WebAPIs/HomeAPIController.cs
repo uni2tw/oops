@@ -20,11 +20,14 @@ namespace Oops.WebAPIs
         ErrorDao dao = IoC.Get<ErrorDao>();
 
         [HttpGet]
-        [Route("/api/info")]
+        [Route("/oops/info")]
         public dynamic Info()
         {
             return new
             {
+                db = IoC.Get<ErrorDao>().LoadConnectString(),
+                pendingLogs = IoC.Get<LogDao>().GetPendingLogsCount(),
+                status = IoC.Get<LogDao>().GetStatus(),
                 platform = Environment.OSVersion.VersionString,
                 user = Environment.UserName,
                 machine = Environment.MachineName,
@@ -107,7 +110,7 @@ namespace Oops.WebAPIs
                 {
                     minLevel = OopsLogLevel.Warn;
                 }
-                LogsResponse response = await new LogDao().GetLogs(
+                LogsResponse response = await IoC.Get<LogDao>().GetLogs(
                     model.service, model.logger, minLevel, maxLevel, model.date, page, pageSize);
 
                 currentPage = response.CurrentPage;
@@ -140,7 +143,7 @@ namespace Oops.WebAPIs
         [Route("api/options")]
         public async Task<dynamic> GetOptions()
         {
-            var response = await new LogDao().GetOptionsAsync();
+            var response = await IoC.Get<LogDao>().GetOptionsAsync();
             return Ok(response);
         }
 

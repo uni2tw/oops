@@ -14,7 +14,7 @@ namespace Oops.DataModels
         public const string _TOPIC = "log";
         public OopsLog()
         {
-
+            
         }
         [Key]
         public int Id { get; set; }
