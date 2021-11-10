@@ -26,7 +26,7 @@ namespace Oops.Services
         ErrorDao errorDao = IoC.Get<ErrorDao>();
         LogDao logDao = IoC.Get<LogDao>();
 
-        public OnChangedHandler OnChanged { get; set; }
+        public OnChangedHandler OnChanged { get; set; }        
 
         public void Start()
         {
@@ -55,7 +55,7 @@ namespace Oops.Services
                 if (OnChanged != null)
                 {
                     OnChanged(GetClientNumber());
-                }
+                }                
                 Console.WriteLine($"client {args.ClientId} was disconnected.");
             });            
             mqttServer.UseApplicationMessageReceivedHandler(
@@ -74,7 +74,7 @@ namespace Oops.Services
 
                         OopsLog log = System.Text.Json.JsonSerializer.Deserialize<OopsLog>(payload);
                         
-                        Console.WriteLine("message: " + log.ToString());
+                        Console.Write(".");
 
                         //await logDao.InsertLogAsaync(log);
                         logDao.InsertLog(log);

@@ -322,7 +322,7 @@
 					<td class="id-col">{{item.env}}</td>
 					<td class="service-col">{{item.srv}}</td>
 					<td class="host-col">{{item.host}}</td>
-					<td class="logger-col">{{item.logger}}</td>
+					<td class="logger-col" @dblclick.native="setLoggerFilter(item.logger)">{{item.logger}}</td>
 					<td class="message-col">{{item.message}}</td>
 					<td class="date-col">{{getDate(item.time)}}</td>
 					<td class="time-col">{{getTime(item.time)}}</td>
@@ -569,7 +569,9 @@
 						}, this.reloadMode * 1000)
 					}
 				},
-
+				setLoggerFilter: function (logger) {					
+					this.loggerValue = logger;
+				}
 			},
 		}).mount("#app");
 	</script>

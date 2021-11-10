@@ -76,31 +76,10 @@ namespace Oops.Daos
                     timer.Interval = 5000;
                 }
                 timer.Start();
-
             }
         }
 
         private int BulkInert(List<OopsLog> logs)
-        {
-            return BulkInert2(logs);
-            Stopwatch watch = new Stopwatch();
-            watch.Start();            
-            int count = 0;
-            using (IDbConnection conn = new SQLiteConnection(LoadConnectString()))
-            {
-                conn.Open();
-                foreach (var log in logs)
-                {
-                    if (conn.Insert(log) > 0) { count++; }
-                }
-            }
-            var elapsedSecs = watch.Elapsed.TotalSeconds.ToString("0.00");
-            Console.WriteLine($"put {count} logs: {elapsedSecs} secs.");
-            
-            return count;
-        }
-
-        private int BulkInert2(List<OopsLog> logs)
         {
             Stopwatch watch = new Stopwatch();
             watch.Start();
@@ -110,7 +89,7 @@ namespace Oops.Daos
                 conn.BulkInsert(logs);
             }
             var elapsedSecs = watch.Elapsed.TotalSeconds.ToString("0.00");
-            Console.WriteLine($"put {logs.Count} logs: {elapsedSecs} secs.");
+            Console.Write($"{Environment.NewLine}put {logs.Count} logs: {elapsedSecs} secs.");
 
             return logs.Count;
         }
@@ -198,7 +177,7 @@ namespace Oops.Daos
                 response.Logs = logs;
 
                 var elapsedSecs = (DateTime.Now - now).TotalSeconds.ToString("0.00");
-                Console.WriteLine($"get logs: {elapsedSecs} secs.");
+                Console.Write($"{Environment.NewLine}get logs: {elapsedSecs} secs.");
                 return response;
             }
         }
@@ -219,7 +198,7 @@ namespace Oops.Daos
                     Dates = getDatesTask.Result.ToList(),
                 };
                 var elapsedSecs = (DateTime.Now - now).TotalSeconds.ToString("0.00");
-                Console.WriteLine($"get options: {elapsedSecs} secs.");
+                Console.Write($"{Environment.NewLine}get options: {elapsedSecs} secs.");
                 return response;
             }
         }
