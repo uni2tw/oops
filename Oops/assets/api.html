@@ -1,7 +1,7 @@
-<html>
+Ｓ<html>
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-	<title>日誌</title>
+	<title>呼叫API</title>
 	<script type="text/javascript"
 			src="http://ajax.microsoft.com/ajax/jquery/jquery-1.4.2.min.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/vue@3.2.20"></script>
@@ -267,13 +267,6 @@
 					<option value="3600">1 hour</option>
 				</select>
 			</li>
-			<li style="float:right">
-				log level:
-				<select v-model="warnOnly">
-					<option value="0"></option>
-					<option value="1">Warn Or Error</option>
-				</select>
-			</li>
 		</ul>
 		<div class="oops-list" style="position: relative">
 			<div style="display: flex; justify-content: space-between; margin: 1em 0em">
@@ -314,20 +307,20 @@
 			<table id="ErrorLog" cellspacing="0" style="border-collapse: collapse">
 				<tr>
 					<th class="id-col">Id</th>
-					<th class="env-col">Env</th>
 					<th class="service-col">Service</th>
-					<th class="host-col">Host</th>
-					<th class="logger-col">Logger</th>
-					<th class="message-col">Message</th>
+					<th class="url-col">Url</th>
+					<th class="method-col">Method</th>
+					<th class="status-col">Status</th>
+					<th class="request-col">Request</th>
+					<th class="response-col">Response</th>
 					<th class="date-col">Date</th>
 					<th class="time-col">Time</th>
 				</tr>
 				<tr v-for="(item, idx) in items"
 					:class="{'even-row': idx % 2 == 0, 'odd-row': idx % 2 == 1, 'level0': item.level==0, 'level1': item.level==1,'level2': item.level==2,'level3': item.level==3,'level4': item.level==4,'level5': item.level==5,'level6': item.level==6}">
-					<td class="id-col">{{item.id}}</td>
-					<td class="id-col">{{item.env}}</td>
+					<td class="id-col">{{item.id}}</td>					
 					<td class="service-col">{{item.srv}}</td>
-					<td class="host-col">{{item.host}}</td>
+					<td class="url-col">{{item.host}}</td>
 					<td class="logger-col" @dblclick.native="setLoggerFilter(item.logger)">{{item.logger}}</td>
 					<td class="message-col">{{item.message}}</td>
 					<td class="date-col">{{getDate(item.time)}}</td>
@@ -388,7 +381,7 @@
 		const app = Vue.createApp({
 			data: function () {
 				return {
-					pageTitle: "日誌",
+					pageTitle: "呼叫API",
 					pageSize: 200,
 					page: 1,
 					pagerInfo: {},

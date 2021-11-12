@@ -21,7 +21,7 @@ namespace Oops
         }
 
         public void ConfigureServices(IServiceCollection services)
-        {
+        {            
             services.AddControllers()
                 .AddJsonOptions(options =>
                 {
@@ -30,7 +30,7 @@ namespace Oops
                 });
         }
         public void Configure(IApplicationBuilder app)
-        {
+        {            
             string assetsPath = Helper.MapPath("assets");
             if (Directory.Exists(assetsPath) == false)
             {
@@ -48,10 +48,10 @@ namespace Oops
             if (_configuration.GetSection("AllowIpMiddleware").GetValue<bool?>("Enabled").GetValueOrDefault())
             {
                 app.UseMiddleware<AllowIpMiddleware>();
-            }
+            }            
             app.UseRouting();
             app.UseEndpoints(config =>
-            {
+            {                
                 config.MapControllers();
             });
             app.UseWebSockets();

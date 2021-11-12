@@ -2,6 +2,7 @@ using System;
 using System.Text;
 using MQTTnet;
 using MQTTnet.Server;
+using oops.DataModels;
 using Oops.Components;
 using Oops.Daos;
 using Oops.DataModels;
@@ -23,6 +24,7 @@ namespace Oops.Services
         public static System.Collections.Concurrent.ConcurrentDictionary<string, DateTime> clientIds
             = new System.Collections.Concurrent.ConcurrentDictionary<string, DateTime>();
         IMqttServer mqttServer = new MqttFactory().CreateMqttServer();
+        ApiDao apiDao = IoC.Get<ApiDao>();
         ErrorDao errorDao = IoC.Get<ErrorDao>();
         LogDao logDao = IoC.Get<LogDao>();
 
@@ -67,7 +69,7 @@ namespace Oops.Services
                         return;
                     }
 
-                    if (topic == "log")
+                    if (topic == OopsLog._TOPIC)
                     {
                         string payload =
                             Encoding.UTF8.GetString(eventArgs.ApplicationMessage.Payload);
@@ -78,6 +80,18 @@ namespace Oops.Services
 
                         //await logDao.InsertLogAsaync(log);
                         logDao.InsertLog(log);
+                    }
+                    else if (topic == OopsApi._TOPIC)
+                    {
+                        string payload =
+                            Encoding.UTF8.GetString(eventArgs.ApplicationMessage.Payload);
+
+                        OopsApi log = System.Text.Json.JsonSerializer.Deserialize<OopsApi>(payload);
+
+                        Console.Write(".");
+
+                        //await logDao.InsertLogAsaync(log);
+                        apiDao.InsertApi(log);
                     }
                     else
                     {

@@ -1,9 +1,11 @@
 using System;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet;
 using MQTTnet.Client;
 using MQTTnet.Client.Options;
+using oops.DataModels;
 using Oops.DataModels;
 
 namespace Oops.Components
@@ -88,6 +90,34 @@ namespace Oops.Components
                     log.Date = log.Time.ToString("yyyyMMdd");
                     log.Message = message;
                     mqttClient.PublishAsync(DataModels.OopsLog._TOPIC, System.Text.Json.JsonSerializer.Serialize(log));
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
+            }
+        }
+
+        public void PushApi(string service, string path, string method,int statusCode, string request, string response, string error, string trace)
+        {
+            if (mqttClient != null)
+            {
+                try
+                {
+                    OopsApi api = new OopsApi(); 
+   
+                    api.Srv = service;
+                    api.Host = Environment.MachineName;
+                    api.Url = path;
+                    api.Method = method;
+                    api.StatusCode = statusCode;
+                    api.Request = request;
+                    api.Response = response;
+                    api.Error = error;
+                    api.Time = DateTime.Now;                    
+                    api.Date = api.Time.ToString("yyyyMMdd");
+         
+                    mqttClient.PublishAsync(OopsApi._TOPIC, JsonSerializer.Serialize(api));
                 }
                 catch (Exception ex)
                 {

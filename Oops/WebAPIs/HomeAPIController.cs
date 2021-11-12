@@ -36,14 +36,14 @@ namespace Oops.WebAPIs
         }
 
         [HttpGet]
-        [Route("/api/test/log")]
+        [Route("/oops/test/log")]
         public dynamic MqttTestSendLog([FromQuery]string message)
         {
             var oopsClient = new OopsClient();
             try
             {
                 oopsClient.Start("localhost", "test").Wait();
-                oopsClient.PushLog("dev", "unk", 1 , "test", message);
+                oopsClient.PushLog("dev", "oops", 1 , "test", message);
                 oopsClient.Stop();
             }
             catch (Exception ex)
@@ -59,7 +59,30 @@ namespace Oops.WebAPIs
         }
 
         [HttpGet]
-        [Route("/api/test/error")]
+        [Route("/oops/test/api")]
+        public dynamic MqttTestSendApi([FromQuery] string message)
+        {
+            var oopsClient = new OopsClient();
+            try
+            {
+                oopsClient.Start("localhost", "test").Wait();
+                oopsClient.PushApi("oops", "/good/day/test", "POST",300, "{}", "{message=\"OK\"}", "", "");
+                oopsClient.Stop();
+            }
+            catch (Exception ex)
+            {
+                message = ex.Message;
+            }
+            return new
+            {
+
+                message = message
+            };
+
+        }
+
+        [HttpGet]
+        [Route("/oops/test/error")]
         public dynamic MqttMessageTestError(string message)
         {
             var oopsClient = new OopsClient();            
@@ -90,6 +113,7 @@ namespace Oops.WebAPIs
 
         [HttpGet]
         [Route("api/logs")]
+        [Route("oops/api/logs")]
         public async Task<dynamic> GetLogs([FromQuery] GetLogsModel model)
         {
             if (model == null)
@@ -141,6 +165,7 @@ namespace Oops.WebAPIs
 
         [HttpGet]
         [Route("api/options")]
+        [Route("oops/api/options")]
         public async Task<dynamic> GetOptions()
         {
             var response = await IoC.Get<LogDao>().GetOptionsAsync();
@@ -148,7 +173,7 @@ namespace Oops.WebAPIs
         }
 
         [HttpGet]
-        [Route("api/server_info")]
+        [Route("oops/api/server_info")]
         public IActionResult GetServerInfo()
         {
             IMqttService mqttService = IoC.Get<IMqttService>();
@@ -163,6 +188,54 @@ namespace Oops.WebAPIs
             };
             return Ok(data);
         }
+
+        [HttpGet]
+        [Route("api/apis")]
+        [Route("oops/api/apis")]
+        public async Task<dynamic> GetAPIs([FromQuery] GetAPIsModel model)
+        {
+            if (model == null)
+            {
+                return BadRequest();
+            }
+            int page = model.page ?? 1;
+            int pageSize = model.page_size ?? 200;
+
+            int currentPage;
+            int totalPages;
+            int totalRows;
+            try
+            {
+
+                APIsResponse response = await IoC.Get<ApiDao>().GetAPIs(
+                    model.service, model.date, page, pageSize);
+
+                currentPage = response.CurrentPage;
+                totalPages = response.TotalPage;
+                totalRows = response.TotalRows;
+
+                int startRow = (currentPage - 1) * pageSize + 1;
+                int endRow = currentPage * pageSize;
+                if (endRow > totalRows) endRow = totalRows;
+                return Ok(new
+                {
+                    response.Apis,
+                    pagerInfo = new
+                    {
+                        currentPage,
+                        totalPages,
+                        totalRows,
+                        startRow = startRow,
+                        endRow = endRow
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.ToString());
+            }
+        }
+
 
         [HttpPost]
         [Route("api/get_errors")]
@@ -262,6 +335,14 @@ namespace Oops.WebAPIs
         {
             List<string> applications = dao.GetApplications();
             return Ok(applications);
+        }
+
+        public class GetAPIsModel
+        {
+            public string service { get; set; }            
+            public string date { get; set; }            
+            public int? page { get; set; }
+            public int? page_size { get; set; }
         }
 
         public class GetLogsModel

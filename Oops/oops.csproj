@@ -2,7 +2,8 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net6.0</TargetFramework>
-    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>	  
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <AnalysisLevel>latest</AnalysisLevel>	  
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Dapper.Contrib" Version="2.0.78" />
@@ -29,6 +30,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Update="assets\index.html">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="assets\log - 複製.html">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="assets\log.html">

@@ -16,6 +16,21 @@ namespace Oops.Daos
 {
     public class DbUtil
     {
+        public static bool DeleteTable<T>(string connStr)
+        {
+            Type type = typeof(T);            
+            string tableName = type.GetCustomAttribute<TableAttribute>().Name;
+
+            string sql = $"DROP TABLE IF EXISTS {tableName}";
+          
+            using (IDbConnection conn = new SQLiteConnection(connStr))
+            {
+                conn.Open();
+                var count = conn.Execute(sql);
+                return count >= 0;
+            }
+        }
+
         public static bool EnsureTable<T>(string connStr)
         {
             Type type = typeof(T);

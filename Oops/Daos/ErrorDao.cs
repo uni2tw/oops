@@ -9,6 +9,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Oops.DataModels;
 using Oops.ViewModels;
+using oops.DataModels;
 
 namespace Oops.Daos
 {
@@ -159,5 +160,12 @@ namespace Oops.Daos
         public int TotalPage { get; set; }
         public int TotalRows { get; set; }
     }
+    public class APIsResponse
+    {
+        public List<OopsApi> Apis { get; set; }
 
+        public int CurrentPage { get; set; }
+        public int TotalPage { get; set; }
+        public int TotalRows { get; set; }
+    }
 }
