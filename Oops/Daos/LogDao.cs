@@ -21,7 +21,7 @@ namespace Oops.Daos
         }
         const int VeryBusyInterval = 100;
         const int BusyInterval = 1000;
-        const int NormalBusyInterval = 5000;
+        const int NormalInterval = 5000;
         public string GetStatus()
         {
             if (timer.Interval == VeryBusyInterval)
@@ -65,15 +65,15 @@ namespace Oops.Daos
             {
                 if (pendingLogs.Count > 100000)
                 {
-                    timer.Interval = 100;
+                    timer.Interval = VeryBusyInterval;
                 }
                 else if (pendingLogs.Count > 10000)
                 {
-                    timer.Interval = 1000;
+                    timer.Interval = BusyInterval;
                 }
                 else
                 {
-                    timer.Interval = 5000;
+                    timer.Interval = NormalInterval;
                 }
                 timer.Start();
             }

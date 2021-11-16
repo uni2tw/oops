@@ -54,7 +54,7 @@ namespace Oops.Services.WebSockets
             allSockets.TryAdd(socket, true);
 
             int provierNumber = _mqttServer.GetClientNumber();
-            allSockets.Keys.ToList().ForEach(x => SendMessageAsync(x, $"{provierNumber},{_clientNumber}"));
+            allSockets.Keys.ToList().ForEach(x => SendMessageAsync(x, $"{provierNumber},{_clientNumber}"));            
             while (socket.State == WebSocketState.Open)
             {
                 var result = await socket.ReceiveAsync(buffer: new ArraySegment<byte>(buffer),

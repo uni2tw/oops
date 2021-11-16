@@ -385,9 +385,7 @@
 					pageSize: 200,
 					page: 1,
 					pagerInfo: {},
-					items: [],
-					apiRoot: "/",
-					warnOnly: 0,
+					items: [],										
 					loggerValue: '',
 					loggerOptions: [],
 					serviceValue: '',
@@ -425,10 +423,6 @@
 					this.reloadMode = newVal || 0;
 					this.setReload();
 				},
-				warnOnly: function (newVal, oldVal) {
-					window.localStorage.setItem("warnOnly", newVal);
-					this.warnOnly = newVal || 0;
-				},
 				serviceValue: {
 					handler: function (newVal, oldVal) {
 						this.page = 1;
@@ -459,8 +453,7 @@
 				this.moment = m;
 			},
 			mounted: function () {
-				this.reloadMode = parseInt(window.localStorage.getItem('reloadMode'), 10) || 10;
-				this.warnOnly = parseInt(window.localStorage.getItem('warnOnly'), 10) || 0;
+				this.reloadMode = parseInt(window.localStorage.getItem('reloadMode'), 10) || 10;				
 				this.serviceValue = window.localStorage.getItem('serviceValue') ?? '';
 				this.loggerValue = window.localStorage.getItem('loggerValue') ?? '';
 				this.dateValue = window.localStorage.getItem('dateValue') ?? '';
@@ -499,10 +492,7 @@
 					if (this.pageSize != 200) {
 						paras.push('page_size=' + this.pageSize);
 					}
-					if (this.warnOnly != 0) {
-						paras.push('warn_only=' + this.warnOnly);
-					}
-					let url = "/oops/api/logs";
+					let url = "/oops/api/apis";
 					if (paras.length > 0) {
 						url = url + "?" + paras.join("&");
 					}
