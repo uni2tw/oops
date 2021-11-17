@@ -90,8 +90,15 @@ class Program
         app.MapControllers();
         app.UseWebSockets();
         app.MapWebSocketManager("/ws");
+
+        app.Lifetime.ApplicationStopping.Register(() =>
+        {
+            IoC.Get<IMqttService>().Stop();
+            IoC.Get<LogDao>().Flush();
+        });
+
         app.Run();
 
-        IoC.Get<IMqttService>().Stop();
+        
     }
 }

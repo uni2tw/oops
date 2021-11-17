@@ -8,6 +8,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Oops.DataModels;
 using System.Diagnostics;
+using System.Threading;
 
 namespace Oops.Daos
 {
@@ -79,6 +80,40 @@ namespace Oops.Daos
             }
         }
 
+        public void Flush()
+        {
+            DateTime stoppingTime = DateTime.Now;
+            timer.Stop();
+            if (pendingLogs.Count == 0)
+            {
+                Console.WriteLine("程式已終止");
+                return;
+            }
+            Console.WriteLine($"程式關閉中，處理 {pendingLogs.Count} 筆資料");
+            while (pendingLogs.Count > 0)
+            {
+                List<OopsLog> logs = new List<OopsLog>();
+                while (pendingLogs.Count > 0 && logs.Count < 1000)
+                {
+                    OopsLog temp;
+                    if (pendingLogs.TryDequeue(out temp))
+                    {
+                        logs.Add(temp);
+                    }
+                }
+                BulkInert(logs);
+                //就等10秒
+                if ((DateTime.Now - stoppingTime).TotalSeconds > 10)
+                {
+                    if (pendingLogs.Count > 0 )
+                    {
+                        Console.WriteLine($"強制關閉，損失 {pendingLogs.Count} 筆資料");
+                    }
+                    break;
+                }
+            }
+        }
+
         private int BulkInert(List<OopsLog> logs)
         {
             Stopwatch watch = new Stopwatch();
@@ -93,8 +128,6 @@ namespace Oops.Daos
 
             return logs.Count;
         }
-
-
 
         public void InsertLog(OopsLog log)
         {

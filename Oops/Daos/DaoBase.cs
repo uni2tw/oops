@@ -2,7 +2,7 @@ using Oops.Components;
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
-using System.Data;
+using System.Linq;
 using System.Data.SQLite;
 using System.Reflection;
 using System.Text;
@@ -42,6 +42,14 @@ namespace Oops.Daos
     public static class SqliteExtensnios
     {
         public static void BulkInsert<T>(this SQLiteConnection conn, IList<T> items, string tableName = null) where T : new()
+        {
+            int sqliteLimitInsertMultipleRows = 500;
+            for (int i = 0; i < items.Count; i = i + sqliteLimitInsertMultipleRows)
+            {
+                DoBulkInsert(conn, items.Skip(i).Take(sqliteLimitInsertMultipleRows).ToList());
+            }
+        }
+        private static void DoBulkInsert<T>(this SQLiteConnection conn, IList<T> items, string tableName = null) where T : new()
         {
             if (tableName == null)
             {

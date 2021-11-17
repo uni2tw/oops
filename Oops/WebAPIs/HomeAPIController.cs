@@ -113,6 +113,7 @@ namespace Oops.WebAPIs
 
         [HttpGet]
         [Route("api/logs")]
+        [Route("oops/logs")]
         [Route("oops/api/logs")]
         public async Task<dynamic> GetLogs([FromQuery] GetLogsModel model)
         {
@@ -165,6 +166,7 @@ namespace Oops.WebAPIs
 
         [HttpGet]
         [Route("api/options")]
+        [Route("oops/options")]
         [Route("oops/api/options")]
         public async Task<dynamic> GetOptions()
         {
@@ -173,6 +175,8 @@ namespace Oops.WebAPIs
         }
 
         [HttpGet]
+        [Route("api/server_info")]
+        [Route("oops/server_info")]
         [Route("oops/api/server_info")]
         public IActionResult GetServerInfo()
         {
