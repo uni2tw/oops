@@ -120,6 +120,7 @@ namespace Oops.Daos
             OopsLogLevel minLevel, OopsLogLevel maxLevel,
             string date, int page, int pageSize, string traceId)
         {
+
             using (IDbConnection conn = new SQLiteConnection(LoadConnectString()))
             {
                 string sqlCountHead = "select count(*) from log";
@@ -207,7 +208,7 @@ namespace Oops.Daos
                     Dates = getDatesTask.Result.ToList(),
                 };
                 var elapsedSecs = (DateTime.Now - now).TotalSeconds.ToString("0.00");
-                Console.Write($"{Environment.NewLine}get options: {elapsedSecs} secs.");
+                //Console.Write($"{Environment.NewLine}get options: {elapsedSecs} secs.");
                 return response;
             }
         }

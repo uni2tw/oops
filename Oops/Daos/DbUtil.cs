@@ -134,6 +134,11 @@ namespace Oops.Daos
             {
                 try
                 {
+                    DirectoryInfo di = new DirectoryInfo(Path.GetDirectoryName(dbfile));
+                    if (di.Exists == false)
+                    {
+                        di.Create();
+                    }                    
                     SQLiteConnection.CreateFile(dbfile);
                 } 
                 catch (Exception)
@@ -181,8 +186,7 @@ namespace Oops.Daos
 
         public static void EnsureTables()
         {
-            ErrorDao dao = IoC.Get<ErrorDao>();
-            DbUtil.AddTableColumn<OopsLog>(dao.LoadConnectString(), "TraceId", "Text");
+            ErrorDao dao = IoC.Get<ErrorDao>();            
 
             DbUtil.EnsureTable<Error>(dao.LoadConnectString());
             DbUtil.EnsureIndex<Error>(dao.LoadConnectString(), "Time");
@@ -198,6 +202,9 @@ namespace Oops.Daos
             DbUtil.EnsureIndex<OopsLog>(dao.LoadConnectString(), nameof(OopsLog.Logger), nameof(OopsLog.Date));
             DbUtil.EnsureIndex<OopsLog>(dao.LoadConnectString(), nameof(OopsLog.Logger), nameof(OopsLog.Level), nameof(OopsLog.Date));
             DbUtil.EnsureIndex<OopsLog>(dao.LoadConnectString(), nameof(OopsLog.Logger), nameof(OopsLog.Srv), nameof(OopsLog.Date));
+
+            DbUtil.AddTableColumn<OopsLog>(dao.LoadConnectString(), "TraceId", "Text");
+            DbUtil.EnsureIndex<OopsLog>(dao.LoadConnectString(), nameof(OopsLog.TraceId));
 
             DbUtil.EnsureTable<OopsApi>(dao.LoadConnectString());
             DbUtil.EnsureIndex<OopsApi>(dao.LoadConnectString(), nameof(OopsApi.Date), nameof(OopsApi.Url));

@@ -7,13 +7,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Oops.Services.WebSockets;
 using Microsoft.Extensions.Configuration;
-using System.Configuration;
 using Oops.Daos;
 using System.Diagnostics;
 using System.Text.Json.Serialization;
 using System.Text.Json;
-using Microsoft.AspNetCore.Hosting;
 using Oops.Services;
+using Microsoft.Extensions.Hosting;
 
 namespace Oops
 {
@@ -41,7 +40,7 @@ namespace Oops
                     options.JsonSerializerOptions.Converters.Add(new LocalDateTimeConverter(offsetTime));
                 });
         }
-        public void Configure(IApplicationBuilder app, IApplicationLifetime appLifetime)
+        public void Configure(IApplicationBuilder app, IHostApplicationLifetime appLifetime)
         {
             string assetsPath = Helper.MapPath("assets");
             if (Directory.Exists(assetsPath) == false)
