@@ -45,7 +45,6 @@ class Program
 
         ErrorDao dao = IoC.Get<ErrorDao>();
         Console.WriteLine("LoadConnectString: " + dao.LoadConnectString());
-        DbUtil.EnsureDBFile(dao.LoadConnectString());
         DbUtil.EnsureTable<Error>(dao.LoadConnectString());
         DbUtil.EnsureIndex<Error>(dao.LoadConnectString(), "Time");
         DbUtil.EnsureIndex<Error>(dao.LoadConnectString(), "Application", "Time");
@@ -94,7 +93,7 @@ class Program
         app.Lifetime.ApplicationStopping.Register(() =>
         {
             IoC.Get<IMqttService>().Stop();
-            IoC.Get<LogDao>().Flush();
+            IoC.Get<LogDao>().Flush();            
         });
 
         app.Run();

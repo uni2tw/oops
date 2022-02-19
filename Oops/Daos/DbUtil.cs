@@ -117,18 +117,18 @@ namespace Oops.Daos
             }
         }
 
-        public static void EnsureDBFile(string connectionString)
+        public static void EnsureDBFile(string dbfile)
         {
-            string dbfile;
-            try
-            {
-                dbfile = Regex.Match(connectionString, @"data source=([A-Z: \\a-z0-9.\/]*);", RegexOptions.IgnoreCase)
-                    .Groups[1].Value;
-            } catch
-            {
-                Console.WriteLine("無法解析 connectionString");
-                throw;
-            }
+            //string dbfile;
+            //try
+            //{
+            //    dbfile = Regex.Match(connectionString, @"data source=([A-Z:\\a-z0-9-{}.\/]*)(;[\w\W]*);", RegexOptions.IgnoreCase)
+            //        .Groups[1].Value;
+            //} catch
+            //{
+            //    Console.WriteLine("無法解析 connectionString");
+            //    throw;
+            //}
             if (File.Exists(dbfile) == false)
             {
                 try

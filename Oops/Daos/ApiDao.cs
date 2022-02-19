@@ -6,10 +6,10 @@ using System.Data;
 using System.Data.SQLite;
 using System.Linq;
 using System.Threading.Tasks;
-using Oops.DataModels;
 using System.Diagnostics;
 using System.Collections.Concurrent;
 using oops.DataModels;
+using oops.Daos;
 
 namespace Oops.Daos
 {
