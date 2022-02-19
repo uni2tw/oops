@@ -73,14 +73,14 @@ namespace Oops.Components
             }
         }
 
-        public void PushLog(string env, string service, int level,string logger, string message)
+        public void PushLog(string traceId, string service, int level, string logger, string message)
         {
             if (mqttClient != null)
             {
                 try
                 {
                     OopsLog log = new OopsLog();
-                    log.Env = env;
+                    log.TraceId = traceId;
                     log.Srv = service;
                     log.Host = Environment.MachineName;
                     log.Level = level;

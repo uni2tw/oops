@@ -9,6 +9,8 @@ using System.Text;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using System.Data.Entity.Core.Common.CommandTrees.ExpressionBuilder;
+using oops.DataModels;
+using Oops.DataModels;
 
 namespace Oops.Daos
 {
@@ -30,8 +32,9 @@ namespace Oops.Daos
             dataSourceDefault = match.Groups[2].Value;
             connectionStringWithoutDataSource = match.Groups[3].Value;
         }
-        public string GetConnectionString()
-{
+        public string GetConnectionString(out bool changed)
+        {
+            changed = false;
             DateTime now = DateTime.Now;
             string dataSource = dataSourceDefault
                 .Replace("{yyyy}", now.ToString("yyyy"))
@@ -39,11 +42,13 @@ namespace Oops.Daos
                 .Replace("{dd}", now.ToString("dd"));
             if (lastDataSource != dataSource)
             {
-                DbUtil.EnsureDBFile(dataSource);
                 lastDataSource = dataSource;
+                changed = true;
             }
             return $"{dataSourceHeader}{dataSource}{connectionStringWithoutDataSource}";
         }
+
+
     }
     public class DaoBase
     {
@@ -60,8 +65,16 @@ namespace Oops.Daos
             {
                 builder = new ConnectionStringBuilder();
                 builder.SetConnectionString(conn.ConnectionString);
+            }            
+            bool changed;
+            var result  = builder.GetConnectionString(out changed);
+            if (changed)
+            {
+                DbUtil.EnsureDBFile(result);
+                DbUtil.EnsureTables();
             }
-            return builder.GetConnectionString();
+            return result;
+
         }
     }
 
@@ -75,5 +88,9 @@ namespace Oops.Daos
         public string ConnectionString { get; set; }
     }
 
+    public interface IDBConnManager
+    {
+        IDBConnectionConfig GetConnection(string platformId);
+    }
 
 }

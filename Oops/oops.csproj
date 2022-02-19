@@ -39,9 +39,13 @@
     </None>
     <None Update="assets\log.html">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="assets\people_group_icon.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>	
     <None Update="assets\site.css">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
+  <ProjectExtensions><VisualStudio><UserProperties appsettings_1json__JsonSchema="" /></VisualStudio></ProjectExtensions>
 </Project>

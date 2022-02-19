@@ -12,11 +12,11 @@ namespace Oops.Services
     public delegate void OnChangedHandler(int number);
     public interface IMqttService
     {
-        void Start();
+        void Start(int? port);
         void Stop();
         int GetClientNumber();
 
-        OnChangedHandler OnChanged{ get; set; }
+        OnChangedHandler OnChanged { get; set; }
     }
     public class MqttService : IMqttService
     {
@@ -24,13 +24,12 @@ namespace Oops.Services
         public static System.Collections.Concurrent.ConcurrentDictionary<string, DateTime> clientIds
             = new System.Collections.Concurrent.ConcurrentDictionary<string, DateTime>();
         IMqttServer mqttServer = new MqttFactory().CreateMqttServer();
-        ApiDao apiDao = IoC.Get<ApiDao>();
         ErrorDao errorDao = IoC.Get<ErrorDao>();
         LogDao logDao = IoC.Get<LogDao>();
 
-        public OnChangedHandler OnChanged { get; set; }        
+        public OnChangedHandler OnChanged { get; set; }
 
-        public void Start()
+        public void Start(int? port)
         {
             Console.WriteLine("matt server starting.");
 
@@ -57,9 +56,9 @@ namespace Oops.Services
                 if (OnChanged != null)
                 {
                     OnChanged(GetClientNumber());
-                }                
+                }
                 Console.WriteLine($"client {args.ClientId} was disconnected.");
-            });            
+            });
             mqttServer.UseApplicationMessageReceivedHandler(
                 async delegate (MqttApplicationMessageReceivedEventArgs eventArgs)
                 {
@@ -75,23 +74,11 @@ namespace Oops.Services
                             Encoding.UTF8.GetString(eventArgs.ApplicationMessage.Payload);
 
                         OopsLog log = System.Text.Json.JsonSerializer.Deserialize<OopsLog>(payload);
-                        
+
                         Console.Write(".");
 
                         //await logDao.InsertLogAsaync(log);
                         logDao.InsertLog(log);
-                    }
-                    else if (topic == OopsApi._TOPIC)
-                    {
-                        string payload =
-                            Encoding.UTF8.GetString(eventArgs.ApplicationMessage.Payload);
-
-                        OopsApi log = System.Text.Json.JsonSerializer.Deserialize<OopsApi>(payload);
-
-                        Console.Write(".");
-
-                        //await logDao.InsertLogAsaync(log);
-                        apiDao.InsertApi(log);
                     }
                     else
                     {
@@ -109,8 +96,18 @@ namespace Oops.Services
                         await errorDao.InsertErrorLogAsync(error);
                     }
                 });
-            mqttServer.StartAsync(new MqttServerOptions()).Wait();
 
+            if (port != null)
+            {
+                var optionBuilder = new MqttServerOptionsBuilder()
+                    .WithDefaultEndpointPort(port.Value);
+                IMqttServerOptions option = optionBuilder.Build();
+                mqttServer.StartAsync(option).Wait();
+            }
+            else
+            {
+                mqttServer.StartAsync(new MqttServerOptions()).Wait();
+            }
         }
 
         public void Stop()

@@ -12,13 +12,19 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
 using Autofac.Core;
 using Oops.Services.WebSockets;
+using Microsoft.Extensions.Configuration;
 
 namespace Oops.WebAPIs
 {
     public class HomeAPIController : Controller
     {
-        ErrorDao dao = IoC.Get<ErrorDao>();
+        IConfiguration _configuration;
+        public HomeAPIController(IConfiguration configuration)
+        {
+            _configuration = configuration;
+        }
 
+        ErrorDao dao = IoC.Get<ErrorDao>();
         [HttpGet]
         [Route("/oops/info")]
         public dynamic Info()
@@ -28,7 +34,7 @@ namespace Oops.WebAPIs
                 db = IoC.Get<ErrorDao>().LoadConnectString(),
                 pendingLogs = IoC.Get<LogDao>().GetPendingLogsCount(),
                 status = IoC.Get<LogDao>().GetStatus(),
-                platform = Environment.OSVersion.VersionString,
+                env_sys = Environment.OSVersion.VersionString,
                 user = Environment.UserName,
                 machine = Environment.MachineName,
                 time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
@@ -136,31 +142,37 @@ namespace Oops.WebAPIs
                     minLevel = OopsLogLevel.Warn;
                 }
                 LogsResponse response = await IoC.Get<LogDao>().GetLogs(
-                    model.service, model.logger, minLevel, maxLevel, model.date, page, pageSize);
+                    model.service, model.logger, minLevel, maxLevel, model.date, page, pageSize, model.traceId);
 
                 currentPage = response.CurrentPage;
                 totalPages = response.TotalPage;
                 totalRows = response.TotalRows;
 
                 int startRow = (currentPage - 1) * pageSize + 1;
-                int endRow = currentPage* pageSize;
+                int endRow = currentPage * pageSize;
                 if (endRow > totalRows) endRow = totalRows;
+                string queryMode = "";
+                if (string.IsNullOrEmpty(model.traceId) == false)
+                {
+                    queryMode = "traceIdQuery";
+                }
                 return Ok(new
                 {
                     response.Logs,
                     pagerInfo = new
-                    {                        
+                    {
                         currentPage,
                         totalPages,
                         totalRows,
                         startRow = startRow,
                         endRow = endRow
-                    }
+                    },
+                    queryMode
                 });
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.ToString());                
+                return BadRequest(ex.ToString());
             }
         }
 
@@ -188,7 +200,8 @@ namespace Oops.WebAPIs
             var data = new
             {
                 ProviderNumber = providerNumber,
-                viewerNumber = viewerNumber
+                viewerNumber = viewerNumber,
+                pageTitle = _configuration.GetSection("Title").Get<string>() ?? string.Empty
             };
             return Ok(data);
         }
@@ -354,9 +367,10 @@ namespace Oops.WebAPIs
             public string service { get; set; }
             public string logger { get; set; }
             public string date { get; set; }
+            public string traceId { get; set; }
             public int warn_only { get; set; }
             public int? page { get; set; }
-            public int? page_size { get; set; }            
+            public int? page_size { get; set; }
         }
 
 

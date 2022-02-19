@@ -78,37 +78,49 @@
 
 		.level0, .level1, .level2 {
 		}
-		.level3 {		
+
+		.level3 {
+			font-weight: bold;
 			color: blue;
 		}
-		.level4, .level5 {		
-			color: red;			
+
+		.level3 {
+			color: blue;
 		}
-        .level5 {
-            font-weight: bold;
-            color: darkred;
-        }
-        .level3 .message-col {
-            white-space: pre-wrap;
-        }
-        .level4 .message-col {
-            white-space: pre-wrap;
-        }
-        .level5 .message-col {
-            white-space: pre-wrap;
-        }
+
+		.level4, .level5 {
+			color: red;
+		}
+
+		.level5 {
+			font-weight: bold;
+			color: darkred;
+		}
+
+		.level4 .message-col {
+			white-space: pre-wrap;
+		}
+
+		.level5 .message-col {
+			white-space: pre-wrap;
+		}
+
 		.id-col {
 			width: 40px;
 			font-size: 0.8rem;
+			position: relative;
 		}
+
 		.env-col {
 			width: 40px;
 			font-size: 0.8rem;
 		}
+
 		.server-info {
 			color: lightgoldenrodyellow;
 			text-transform: capitalize;
 		}
+
 		.service-col {
 			width: 40px;
 			font-size: 0.8rem;
@@ -223,7 +235,7 @@
 
 			#SpeedList li {
 				display: inline-block;
-				padding:4px 8px 6px 4px;
+				padding: 4px 8px 6px 4px;
 			}
 
 		.alert-warning {
@@ -231,13 +243,31 @@
 		}
 
 		.notice {
-			font-weight:bold;
+			font-weight: bold;
 		}
 
 		@media print {
 			#SpeedList {
 				display: none;
 			}
+		}
+
+		.trace-id-icon {
+			width: 18px;
+			opacity: 0.3;
+			cursor: pointer;
+			position: absolute;
+			bottom: 0;
+			right: 0;
+		}
+
+		.trace-id-actived-icon {
+			opacity: 1.0;
+		}
+
+		.obscure {
+			/*opacity: 0.3;*/
+			visibility: hidden;
 		}
 	</style>
 </head>
@@ -281,7 +311,7 @@
 			</li>
 		</ul>
 		<div class="oops-list" style="position: relative">
-			<div style="display: flex; justify-content: space-between; margin: 1em 0em">
+			<div style="display: flex; justify-content: space-between; margin: 1em 0em" :class="{'obscure': this.queryMode != ''}">
 				<div style="padding-top:3px">
 					Items {{pagerInfo.start_row}} to {{pagerInfo.end_row}} of total {{pagerInfo.total_rows}} (page
 					{{pagerInfo.current_page}} of {{pagerInfo.total_pages}}). <br />Start with
@@ -319,7 +349,6 @@
 			<table id="ErrorLog" cellspacing="0" style="border-collapse: collapse">
 				<tr>
 					<th class="id-col">Id</th>
-					<th class="env-col">Env</th>
 					<th class="service-col">Service</th>
 					<th class="host-col">Host</th>
 					<th class="logger-col">Logger</th>
@@ -329,11 +358,13 @@
 				</tr>
 				<tr v-for="(item, idx) in items"
 					:class="{'even-row': idx % 2 == 0, 'odd-row': idx % 2 == 1, 'level0': item.level==0, 'level1': item.level==1,'level2': item.level==2,'level3': item.level==3,'level4': item.level==4,'level5': item.level==5,'level6': item.level==6}">
-					<td class="id-col">{{item.id}}</td>
-					<td class="id-col">{{item.env}}</td>
+					<td class="id-col">
+						<span>{{item.id}}</span>
+						<img v-if="item.trace_id" v-on:click="setTraceId(item.trace_id)" src="people_group_icon.png" class="trace-id-icon" :class="{'trace-id-actived-icon': this.queryMode != ''}" />
+					</td>
 					<td class="service-col">{{item.srv}}</td>
 					<td class="host-col">{{item.host}}</td>
-					<td class="logger-col" @dblclick.native="setLoggerFilter(item.logger)">{{item.logger}}</td>
+					<td class="logger-col">{{item.logger}}</td>
 					<td class="message-col">{{item.message}}</td>
 					<td class="date-col">{{getDate(item.time)}}</td>
 					<td class="time-col">{{getTime(item.time)}}</td>
@@ -360,17 +391,21 @@
 
 	<script type="text/javascript">
 		function connect() {
-			var ws = new WebSocket("ws://" + location.host + "/ws");
+			if (location.protocol === "https:") {
+				var ws = new WebSocket("wss://" + location.host + "/oops/ws");
+			} else {
+				var ws = new WebSocket("ws://" + location.host + "/oops/ws");
+			}
 			ws.onopen = function () {
 				console.log('ws was ready.');
 			};
 
-			ws.onmessage = function (e) {				
+			ws.onmessage = function (e) {
 				console.log('ws receive message:', e.data);
 				if (e.data.indexOf(',') != -1) {
 					const provider_number = e.data.split(',')[0];
 					const viewer_number = e.data.split(',')[1];
-					app.serverInfo = provider_number + " Providers, " + viewer_number + " Viewers";					
+					app.serverInfo = provider_number + " Providers, " + viewer_number + " Viewers";
 				}
 			};
 
@@ -417,7 +452,7 @@
 						'sdl': 'Scheduler',
 						'ivo': 'Invoice',
 						'exc': 'Exchange',
-						'ini': 'Initaitor',
+						'ini': 'Initiator',
 						'gpo': 'GroupOrder',
 						'ord': 'Order',
 						'ref': 'Refund',
@@ -427,7 +462,8 @@
 					dateOptions: [],
 					timer: null,
 					reloadMode: 0,
-					serverInfo: ''
+					serverInfo: '',
+					queryMode: ''
 				};
 			},
 			watch: {
@@ -459,6 +495,12 @@
 						window.localStorage.setItem("dateValue", newVal);
 					}
 				},
+				traceIdValue: {
+					handler: function (newVal, oldVal) {
+						this.page = 1;
+						window.localStorage.setItem("traceIdValue", newVal);
+					}
+				},
 				pageSize: {
 					handler: function (newVal, oldVal) {
 						window.localStorage.setItem("pageSize", newVal);
@@ -476,6 +518,7 @@
 				this.serviceValue = window.localStorage.getItem('serviceValue') ?? '';
 				this.loggerValue = window.localStorage.getItem('loggerValue') ?? '';
 				this.dateValue = window.localStorage.getItem('dateValue') ?? '';
+				this.traceIdValue = window.localStorage.getItem('traceIdValue') ?? '';
 				this.pageSize = parseInt(window.localStorage.getItem('pageSize'), 10) || 200;
 
 				console.log('reloadMode:' + this.reloadMode);
@@ -496,25 +539,30 @@
 					let service = this.serviceValue;
 					let logger = this.loggerValue;
 					let date = this.dateValue;
-					if (service) {
-						paras.push('service=' + service);
+					let traceId = this.traceIdValue;
+					if (traceId) {
+						paras.push('traceId=' + traceId);
+					} else {
+						if (service) {
+							paras.push('service=' + service);
+						}
+						if (logger) {
+							paras.push('logger=' + logger);
+						}
+						if (date) {
+							paras.push('date=' + date);
+						}
+						if (this.page != 1) {
+							paras.push('page=' + this.page);
+						}
+						if (this.pageSize != 200) {
+							paras.push('page_size=' + this.pageSize);
+						}
+						if (this.warnOnly != 0) {
+							paras.push('warn_only=' + this.warnOnly);
+						}
 					}
-					if (logger) {
-						paras.push('logger=' + logger);
-					}
-					if (date) {
-						paras.push('date=' + date);
-					}
-					if (this.page != 1) {
-						paras.push('page=' + this.page);
-					}
-					if (this.pageSize != 200) {
-						paras.push('page_size=' + this.pageSize);
-					}
-					if (this.warnOnly != 0) {
-						paras.push('warn_only=' + this.warnOnly);
-					}
-					let url = "/oops/api/logs";
+					let url = "/oops/logs";
 					if (paras.length > 0) {
 						url = url + "?" + paras.join("&");
 					}
@@ -525,12 +573,13 @@
 
 						this.pagerInfo = response.data.pager_info;
 						this.page = this.pagerInfo.current_page;
+						this.queryMode = response.data.query_mode;
 						console.log(response);
 					});
 				},
 				getOptions() {
 					console.log('getOptions...');
-					const url = "/oops/api/options";
+					const url = "/oops/options";
 					axios.get(url).then((response) => {
 						// handle success
 						let data = response.data;
@@ -544,11 +593,12 @@
 				},
 				getServerInfo() {
 					console.log('getServerInfo...');
-					const url = "/oops/api/server_info";
+					const url = "/oops/server_info";
 					axios.get(url).then((response) => {
 						// handle success
 						let data = response.data;
 						this.serverInfo = data.provider_number + " Providers, " + data.viewer_number + " Viewers";
+						this.pageTitle = data.page_title;
 						console.log(response);
 					});
 				},
@@ -580,8 +630,14 @@
 						}, this.reloadMode * 1000)
 					}
 				},
-				setLoggerFilter: function (logger) {					
-					this.loggerValue = logger;
+				setTraceId: function (traceId) {
+					if (this.queryMode == "traceIdQuery") {
+						this.traceIdValue = "";
+					}
+					else {
+						this.traceIdValue = traceId;
+					}
+					this.getLogs();
 				}
 			},
 		}).mount("#app");

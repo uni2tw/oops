@@ -19,6 +19,7 @@ namespace Oops.DataModels
         [Key]
         public int Id { get; set; }
         public string Env { get; set; }
+        public string TraceId { get; set; }
         public string Srv { get; set; }
         public string Host { get; set; }
         public string Logger { get; set; }
@@ -29,6 +30,15 @@ namespace Oops.DataModels
         //2021121006 ¬d¸ß¥Î
         public string DateHour { get; set; }
         public DateTime Time { get; set; }
+    }
+
+    [Table("log_option")]
+    public class OopsLogOption
+    {
+        [Key]
+        public int Id { get; set; }
+        public int Type { get; set; }
+        public string Name { get; set; }
     }
 
     [Table("env")]

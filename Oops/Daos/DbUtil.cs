@@ -1,16 +1,16 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.Data;
 using System.Data.SQLite;
 using System.IO;
 using System.Reflection;
 using System.Text;
-using System.Text.Json;
 using System.Text.RegularExpressions;
 using Dapper;
 using Dapper.Contrib.Extensions;
+using oops.DataModels;
 using Oops.Components;
+using Oops.DataModels;
 
 namespace Oops.Daos
 {
@@ -31,7 +31,7 @@ namespace Oops.Daos
             }
         }
 
-        public static bool EnsureTable<T>(string connStr)
+        private static bool EnsureTable<T>(string connStr)
         {
             Type type = typeof(T);
             var props = type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty | BindingFlags.SetProperty);
@@ -117,18 +117,19 @@ namespace Oops.Daos
             }
         }
 
-        public static void EnsureDBFile(string dbfile)
+        public static void EnsureDBFile(string connectionString)
         {
-            //string dbfile;
-            //try
-            //{
-            //    dbfile = Regex.Match(connectionString, @"data source=([A-Z:\\a-z0-9-{}.\/]*)(;[\w\W]*);", RegexOptions.IgnoreCase)
-            //        .Groups[1].Value;
-            //} catch
-            //{
-            //    Console.WriteLine("無法解析 connectionString");
-            //    throw;
-            //}
+            string dbfile;
+            try
+            {
+                dbfile = Regex.Match(connectionString, @"data source=([A-Z:\\a-z0-9-{}.\/]*)(;[\w\W]*);", RegexOptions.IgnoreCase)
+                    .Groups[1].Value;
+            }
+            catch
+            {
+                Console.WriteLine("無法解析 connectionString");
+                throw;
+            }
             if (File.Exists(dbfile) == false)
             {
                 try
@@ -150,7 +151,7 @@ namespace Oops.Daos
         /// <param name="connStr"></param>
         /// <param name="columns"></param>
         /// <returns></returns>
-        public static bool EnsureIndex<T>(string connStr, params string[] columns)
+        private static bool EnsureIndex<T>(string connStr, params string[] columns)
         {
             if (columns == null || columns.Length == 0)
             {
@@ -176,7 +177,89 @@ namespace Oops.Daos
                 Console.WriteLine("執行sql失敗:" + rawSql + ", ex=" + ex.ToString());
                 return false;
             }
+        }
 
+        public static void EnsureTables()
+        {
+            ErrorDao dao = IoC.Get<ErrorDao>();
+            DbUtil.AddTableColumn<OopsLog>(dao.LoadConnectString(), "TraceId", "Text");
+
+            DbUtil.EnsureTable<Error>(dao.LoadConnectString());
+            DbUtil.EnsureIndex<Error>(dao.LoadConnectString(), "Time");
+            DbUtil.EnsureIndex<Error>(dao.LoadConnectString(), "Application", "Time");
+
+            DbUtil.EnsureTable<OopsLog>(dao.LoadConnectString());
+            DbUtil.EnsureIndex<OopsLog>(dao.LoadConnectString(), nameof(OopsLog.Date), nameof(OopsLog.Srv), nameof(OopsLog.Logger));
+            DbUtil.EnsureIndex<OopsLog>(dao.LoadConnectString(), nameof(OopsLog.Date), nameof(OopsLog.Logger), nameof(OopsLog.Srv));
+            DbUtil.EnsureIndex<OopsLog>(dao.LoadConnectString(), nameof(OopsLog.Srv), nameof(OopsLog.Date));
+            DbUtil.EnsureIndex<OopsLog>(dao.LoadConnectString(), nameof(OopsLog.Srv), nameof(OopsLog.Level), nameof(OopsLog.Date));
+            DbUtil.EnsureIndex<OopsLog>(dao.LoadConnectString(), nameof(OopsLog.Srv), nameof(OopsLog.Logger), nameof(OopsLog.Level), nameof(OopsLog.Date));
+            DbUtil.EnsureIndex<OopsLog>(dao.LoadConnectString(), nameof(OopsLog.Srv), nameof(OopsLog.Logger), nameof(OopsLog.Date));
+            DbUtil.EnsureIndex<OopsLog>(dao.LoadConnectString(), nameof(OopsLog.Logger), nameof(OopsLog.Date));
+            DbUtil.EnsureIndex<OopsLog>(dao.LoadConnectString(), nameof(OopsLog.Logger), nameof(OopsLog.Level), nameof(OopsLog.Date));
+            DbUtil.EnsureIndex<OopsLog>(dao.LoadConnectString(), nameof(OopsLog.Logger), nameof(OopsLog.Srv), nameof(OopsLog.Date));
+
+            DbUtil.EnsureTable<OopsApi>(dao.LoadConnectString());
+            DbUtil.EnsureIndex<OopsApi>(dao.LoadConnectString(), nameof(OopsApi.Date), nameof(OopsApi.Url));
+            DbUtil.EnsureIndex<OopsApi>(dao.LoadConnectString(), nameof(OopsApi.Date), nameof(OopsApi.Srv));
+            DbUtil.EnsureIndex<OopsApi>(dao.LoadConnectString(), nameof(OopsApi.Srv), nameof(OopsApi.Url));
+            DbUtil.EnsureIndex<OopsApi>(dao.LoadConnectString(), nameof(OopsApi.Url));
+
+            DbUtil.EnsureTable<OopsLogOption>(dao.LoadConnectString());
+            IoC.Get<LogDao>().UpgradeForFastOption().Wait();
+        }
+
+        public static void AddTableColumn<T>(string connStr, string fieldName, string fieldType)
+        {
+            bool isExist = false;
+
+
+            string tableName = typeof(T).GetCustomAttribute<TableAttribute>().Name;
+
+            string sqlRaw = string.Empty;
+            try
+            {
+                using (SQLiteConnection conn = new SQLiteConnection(connStr))
+                {
+                    conn.Open();
+
+                    sqlRaw = string.Format("Select * from {0} limit 1", tableName);
+
+                    var tableRow = conn.ExecuteReader(sqlRaw, null);
+
+                    for (int i = 0; i < tableRow.FieldCount; i++)
+                    {
+                        if (isExist)
+                            break;
+
+                        if (fieldName == tableRow.GetName(i))
+                        {
+                            isExist = true;
+                        }
+                    }
+
+                    if (!isExist)
+                    {
+                        sqlRaw = string.Format("ALTER TABLE {0} ADD COLUMN {1} {2} NULL", tableName, fieldName, fieldType);
+
+                        using (SQLiteCommand cmd = new SQLiteCommand(sqlRaw, conn))
+                        {
+                            cmd.ExecuteNonQuery();
+                        }
+
+                        isExist = true;
+                    }
+
+                    tableRow.Close();
+                    tableRow.Dispose();
+                }
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("執行sql失敗:" + sqlRaw + ", ex=" + ex.ToString());
+            }
         }
     }
 }
+
